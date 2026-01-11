@@ -208,15 +208,6 @@ export default function SignupPage() {
                             goTo={goToLogin}
                             googleLogin="Sign up with Google"
                         />
-
-                        <BoxReveal boxColor="var(--skeleton)" duration={0.3}>
-                            <p className="mt-8 text-sm text-white/50 text-center">
-                                Already have an account?{' '}
-                                <a href="/login" className="text-accent hover:underline font-medium">
-                                    Sign in
-                                </a>
-                            </p>
-                        </BoxReveal>
                     </div>
                 </span>
             </section>
