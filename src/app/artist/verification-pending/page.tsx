@@ -167,18 +167,18 @@ export default function VerificationPendingPage() {
                                 <div
                                     key={index}
                                     className={`flex items-center gap-3 p-3 rounded-lg transition-all ${step.current
-                                            ? 'bg-accent/10 border border-accent/30'
-                                            : step.completed
-                                                ? 'bg-white/5'
-                                                : 'bg-white/5 opacity-50'
+                                        ? 'bg-accent/10 border border-accent/30'
+                                        : step.completed
+                                            ? 'bg-white/5'
+                                            : 'bg-white/5 opacity-50'
                                         }`}
                                 >
                                     <step.icon
                                         className={`w-5 h-5 ${step.current
-                                                ? 'text-accent animate-pulse'
-                                                : step.completed
-                                                    ? 'text-accent'
-                                                    : 'text-white/40'
+                                            ? 'text-accent animate-pulse'
+                                            : step.completed
+                                                ? 'text-accent'
+                                                : 'text-white/40'
                                             }`}
                                     />
                                     <span className={`text-sm ${step.current ? 'text-white font-medium' : 'text-white/60'}`}>
@@ -215,16 +215,16 @@ export default function VerificationPendingPage() {
                             className="space-y-3"
                         >
                             <button
-                                onClick={() => router.push('/')}
+                                onClick={() => router.push('/artist/dashboard')}
                                 className="w-full px-6 py-3 rounded-full bg-accent hover:bg-accent-light text-white font-medium transition-all hover:shadow-lg hover:shadow-accent/20"
                             >
-                                Go to Home
+                                Go to Dashboard
                             </button>
                             <button
-                                onClick={() => router.push('/artist/onboarding')}
+                                onClick={() => router.push('/')}
                                 className="w-full px-6 py-3 rounded-full border border-white/20 text-white/70 hover:bg-white/5 transition-all"
                             >
-                                Back to Onboarding
+                                Go to Home
                             </button>
                         </motion.div>
                     </div>

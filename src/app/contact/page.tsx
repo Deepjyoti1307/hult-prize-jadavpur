@@ -28,23 +28,9 @@ export default function ContactPage() {
             {/* Header */}
             <header className="bg-primary text-white py-6">
                 <div className="container-custom px-4 md:px-6">
-                    <Link href="/" className="flex items-center gap-3 w-fit">
-                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                            <svg
-                                className="w-6 h-6 text-accent"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                                />
-                            </svg>
-                        </div>
-                        <span className="text-xl font-bold">TARANG</span>
+                    <Link href="/" className="flex flex-col w-fit">
+                        <span className="text-2xl font-bold text-white italic">TARANG</span>
+                        <span className="text-xs text-white/60">Where music finds its stage</span>
                     </Link>
                 </div>
             </header>

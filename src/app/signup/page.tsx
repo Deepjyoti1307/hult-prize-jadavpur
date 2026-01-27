@@ -1,5 +1,6 @@
 'use client';
-import { useState, ChangeEvent, FormEvent, ReactNode } from 'react';
+import { useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
     Ripple,
     TechOrbitDisplay,
@@ -121,6 +122,26 @@ const iconsArray: OrbitIcon[] = [
 ];
 
 export default function SignupPage() {
+    return (
+        <Suspense fallback={<SignupLoading />}>
+            <SignupContent />
+        </Suspense>
+    );
+}
+
+function SignupLoading() {
+    return (
+        <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+            <div className="text-white/60">Loading...</div>
+        </main>
+    );
+}
+
+function SignupContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const userType = searchParams.get('type') || 'client'; // default to client
+
     const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
@@ -131,7 +152,8 @@ export default function SignupPage() {
         event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
     ) => {
         event.preventDefault();
-        window.location.href = '/login';
+        // Preserve user type when navigating to login
+        router.push(`/login?type=${userType}`);
     };
 
     const handleInputChange = (
@@ -150,11 +172,19 @@ export default function SignupPage() {
         event.preventDefault();
         console.log('Form submitted', formData);
         // Handle signup logic here
+        // After successful signup, redirect based on user type
+        if (userType === 'artist') {
+            router.push('/artist/onboarding');
+        } else {
+            router.push('/onboarding/client');
+        }
     };
 
     const formFields = {
-        header: 'Join TARANG',
-        subHeader: 'Create your account to connect with amazing artists',
+        header: userType === 'artist' ? 'Join as Artist' : 'Book an Artist',
+        subHeader: userType === 'artist'
+            ? 'Create your artist account to showcase your talent'
+            : 'Create your account to discover and book amazing artists',
         fields: [
             {
                 label: 'Name',

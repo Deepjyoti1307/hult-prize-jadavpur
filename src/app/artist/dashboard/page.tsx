@@ -9,12 +9,9 @@ import {
     Wallet,
     Calendar,
     MapPin,
-    MessageSquare,
     ChevronRight,
-    CheckCircle2,
     Bell,
     ChevronDown,
-    Shield,
     User,
 } from 'lucide-react';
 
@@ -104,9 +101,9 @@ export default function ArtistDashboard() {
                     </div>
                 </header>
 
-                <div className="flex gap-6 p-8">
+                <div className="p-8">
                     {/* Main Content Area */}
-                    <div className="flex-1 space-y-6">
+                    <div className="space-y-6">
                         {/* Welcome Section */}
                         <div>
                             <h1 className="text-3xl font-bold text-white mb-2">
@@ -129,116 +126,123 @@ export default function ArtistDashboard() {
                             ))}
                         </div>
 
-                        {/* Upcoming Booking Section */}
-                        {/* Pending Requests & Bookings */}
+                        {/* Pending Requests - Two Floating Cards */}
                         <div className="space-y-6">
                             <h2 className="text-xl font-semibold text-white">Pending Requests</h2>
 
-                            {/* Request Card 1 */}
-                            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                            JD
-                                        </div>
-                                        <div>
-                                            <h3 className="text-white font-bold">John Doe</h3>
-                                            <p className="text-white/60 text-sm">Wedding Reception • 4 Hours</p>
-                                        </div>
-                                    </div>
-                                    <div className="px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        <span className="text-green-400 text-xs font-bold uppercase tracking-wide">Payment Secured in Escrow</span>
-                                    </div>
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Request Card 1 */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:shadow-accent/10"
+                                >
+                                    {/* Floating gradient accent */}
+                                    <div className="absolute -inset-[1px] bg-gradient-to-r from-accent/20 via-purple-500/20 to-blue-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" />
 
-                                <div className="grid grid-cols-3 gap-4 mb-6">
-                                    <div className="bg-white/5 rounded-xl p-3">
-                                        <p className="text-white/40 text-xs">Date</p>
-                                        <p className="text-white font-medium">Aug 24, 2026</p>
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
+                                                JD
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-bold text-lg">John Doe</h3>
+                                                <p className="text-white/50 text-sm">Wedding Reception</p>
+                                            </div>
+                                        </div>
+                                        <div className="px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full">
+                                            <span className="text-green-400 text-xs font-semibold">Escrow Secured</span>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/5 rounded-xl p-3">
-                                        <p className="text-white/40 text-xs">Location</p>
-                                        <p className="text-white font-medium">Grand Hyatt, Mumbai</p>
-                                    </div>
-                                    <div className="bg-white/5 rounded-xl p-3">
-                                        <p className="text-white/40 text-xs">Your Fee</p>
-                                        <p className="text-white font-bold">₹25,000</p>
-                                    </div>
-                                </div>
 
-                                <div className="flex gap-4">
-                                    <button className="flex-1 py-3 bg-accent hover:bg-accent-light text-white font-bold rounded-xl transition-all">
-                                        Accept Booking
-                                    </button>
-                                    <button className="flex-1 py-3 bg-white/5 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 border border-white/10 text-white font-medium rounded-xl transition-all">
-                                        Decline
-                                    </button>
-                                </div>
+                                    {/* Details */}
+                                    <div className="space-y-3 mb-5">
+                                        <div className="flex items-center gap-3 text-white/60">
+                                            <Calendar className="w-4 h-4 text-accent" />
+                                            <span className="text-sm">Aug 24, 2026 • 4 Hours</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-white/60">
+                                            <MapPin className="w-4 h-4 text-accent" />
+                                            <span className="text-sm">Grand Hyatt, Mumbai</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Fee */}
+                                    <div className="bg-white/5 rounded-2xl p-4 mb-5">
+                                        <p className="text-white/40 text-xs mb-1">Your Fee</p>
+                                        <p className="text-white text-2xl font-bold">₹25,000</p>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-3">
+                                        <button className="flex-1 py-3 bg-accent hover:bg-accent-light text-white font-semibold rounded-xl transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40">
+                                            Accept
+                                        </button>
+                                        <button className="flex-1 py-3 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 hover:border-red-500/30 text-white/80 font-medium rounded-xl transition-all">
+                                            Decline
+                                        </button>
+                                    </div>
+                                </motion.div>
+
+                                {/* Request Card 2 */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10"
+                                >
+                                    {/* Floating gradient accent */}
+                                    <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-accent/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" />
+
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-pink-500/30">
+                                                SP
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-bold text-lg">Sarah Parker</h3>
+                                                <p className="text-white/50 text-sm">Corporate Event</p>
+                                            </div>
+                                        </div>
+                                        <div className="px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                                            <span className="text-yellow-400 text-xs font-semibold">Pending Payment</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Details */}
+                                    <div className="space-y-3 mb-5">
+                                        <div className="flex items-center gap-3 text-white/60">
+                                            <Calendar className="w-4 h-4 text-accent" />
+                                            <span className="text-sm">Sep 10, 2026 • 3 Hours</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-white/60">
+                                            <MapPin className="w-4 h-4 text-accent" />
+                                            <span className="text-sm">Taj Lands End, Mumbai</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Fee */}
+                                    <div className="bg-white/5 rounded-2xl p-4 mb-5">
+                                        <p className="text-white/40 text-xs mb-1">Your Fee</p>
+                                        <p className="text-white text-2xl font-bold">₹18,000</p>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-3">
+                                        <button className="flex-1 py-3 bg-accent hover:bg-accent-light text-white font-semibold rounded-xl transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40">
+                                            Accept
+                                        </button>
+                                        <button className="flex-1 py-3 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 hover:border-red-500/30 text-white/80 font-medium rounded-xl transition-all">
+                                            Decline
+                                        </button>
+                                    </div>
+                                </motion.div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Right Sidebar - Safety Panel */}
-                    <aside className="w-80 space-y-6">
-                        {/* Safety Status */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Shield className="w-5 h-5 text-accent" />
-                                <h3 className="text-white font-semibold">Safety Status</h3>
-                            </div>
-
-                            {/* Verification Items */}
-                            <div className="space-y-3">
-                                <div className="flex items-start gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-accent mt-0.5" />
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Booking Verified</p>
-                                        <p className="text-white/50 text-xs">Securely processed and verified</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-accent mt-0.5" />
-                                    <div>
-                                        <p className="text-white font-medium text-sm">24/7 Support Available</p>
-                                        <p className="text-white/50 text-xs">Always here to assist you</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Emergency Button */}
-                            <button className="w-full mt-4 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-full transition-all flex items-center justify-center gap-2">
-                                <Bell className="w-4 h-4" />
-                                Emergency Button
-                            </button>
-                        </div>
-
-                        {/* Safety Profile */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                            <button className="w-full flex items-center justify-between group">
-                                <div className="flex items-center gap-3">
-                                    <Shield className="w-5 h-5 text-accent" />
-                                    <span className="text-white font-medium">Safety</span>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
-                            </button>
-
-                            <button className="w-full flex items-center justify-between mt-3 group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-accent rounded-full flex items-center justify-center">
-                                        <User className="w-4 h-4 text-white" />
-                                    </div>
-                                    <span className="text-white/80 text-sm">{userName}</span>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
-                            </button>
-                        </div>
-
-                        {/* Contact Support */}
-                        <button className="w-full px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-xl transition-all">
-                            Contact Support
-                        </button>
-                    </aside>
                 </div>
             </main>
         </div>

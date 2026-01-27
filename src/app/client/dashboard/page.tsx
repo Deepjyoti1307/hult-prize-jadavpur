@@ -1,70 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, MapPin, SlidersHorizontal, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, ChevronDown, AlertTriangle, Music, Loader2 } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
 import IncidentModal from '@/components/IncidentModal';
 
-// Mock Data for Artists
-const MOCK_ARTISTS = [
-    {
-        id: '1',
-        name: 'The Midnight Jazz',
-        category: 'Jazz Band',
-        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
-        rating: 4.8,
-        location: 'Mumbai, MH',
-        price: 15000,
-    },
+// Artist type definition
+interface Artist {
+    id: string;
+    name: string;
+    category: string;
+    image: string;
+    rating: number;
+    location: string;
+    price: number;
+}
 
-    {
-        id: '4',
-        name: 'Rhythm Kings',
-        category: 'Rock Band',
-        image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=2670&auto=format&fit=crop',
-        rating: 5.0,
-        location: 'Pune, MH',
-        price: 30000,
-    },
-    {
-        id: '5',
-        name: 'Classical Strings',
-        category: 'Classical',
-        image: 'https://images.unsplash.com/photo-1519683109079-8436f3522616?q=80&w=2670&auto=format&fit=crop',
-        rating: 4.6,
-        location: 'Chennai, TN',
-        price: 18000,
-    },
-    {
-        id: '6',
-        name: 'Fusion Beats',
-        category: 'Fusion',
-        image: 'https://images.unsplash.com/photo-1459749411177-d4a428948843?q=80&w=2670&auto=format&fit=crop',
-        rating: 4.8,
-        location: 'Hyderabad, TS',
-        price: 22000,
-    },
-];
+// User location type
+interface UserLocation {
+    address: string;
+    coords: { lat: number; lng: number } | null;
+}
 
 const CATEGORIES = ['All', 'Live Bands', 'DJs', 'Solo Singers', 'Classical', 'Folk'];
 
 export default function ClientDashboard() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedLocation, setSelectedLocation] = useState('Mumbai');
+    const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+    const [artists, setArtists] = useState<Artist[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [incidentModalOpen, setIncidentModalOpen] = useState(false);
     const [selectedArtist, setSelectedArtist] = useState<{ name: string; image: string } | null>(null);
 
-    const handleBook = (artist: typeof MOCK_ARTISTS[0]) => {
+    // Load user location from localStorage on mount
+    useEffect(() => {
+        const storedLocation = localStorage.getItem('userLocation');
+        if (storedLocation) {
+            const location = JSON.parse(storedLocation) as UserLocation;
+            setUserLocation(location);
+        }
+
+        // TODO: Fetch artists from backend based on location
+        // For now, we'll show empty state since we don't have backend yet
+        // Once backend is integrated, replace this with actual API call:
+        // fetchArtistsByLocation(location.coords?.lat, location.coords?.lng)
+        setIsLoading(false);
+    }, []);
+
+    const handleBook = (artist: Artist) => {
         setSelectedArtist({ name: artist.name, image: artist.image });
         setBookingModalOpen(true);
     };
 
-    const filteredArtists = MOCK_ARTISTS.filter(artist => {
-        const matchesCategory = selectedCategory === 'All' || artist.category.includes(selectedCategory); // Simple match
+    const filteredArtists = artists.filter(artist => {
+        const matchesCategory = selectedCategory === 'All' || artist.category.includes(selectedCategory);
         const matchesSearch = artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             artist.category.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
@@ -89,12 +82,11 @@ export default function ClientDashboard() {
                         <span>Report Issue</span>
                     </button>
 
-                    {/* Location Selector */}
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all">
+                    {/* Location Display */}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white">
                         <MapPin className="w-4 h-4 text-accent" />
-                        <span>{selectedLocation}</span>
-                        <ChevronDown className="w-4 h-4 text-white/60" />
-                    </button>
+                        <span className="max-w-[200px] truncate">{userLocation?.address || 'Location not set'}</span>
+                    </div>
 
                     {/* User Profile */}
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-accent p-[2px]">
@@ -169,25 +161,46 @@ export default function ClientDashboard() {
             {/* Artists Grid */}
             <section>
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">Recommended for You</h2>
-                    <button className="text-accent hover:text-accent-light text-sm font-medium transition-colors">
-                        View All
-                    </button>
+                    <h2 className="text-xl font-bold text-white">
+                        {userLocation ? `Artists near ${userLocation.address.split(',')[0]}` : 'Recommended for You'}
+                    </h2>
+                    {artists.length > 0 && (
+                        <button className="text-accent hover:text-accent-light text-sm font-medium transition-colors">
+                            View All
+                        </button>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredArtists.map((artist) => (
-                        <ArtistCard
-                            key={artist.id}
-                            {...artist}
-                            onBook={() => handleBook(artist)}
-                        />
-                    ))}
-                </div>
-
-                {filteredArtists.length === 0 && (
-                    <div className="text-center py-20">
-                        <p className="text-white/40">No artists found matching your criteria.</p>
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
+                        <p className="text-white/60">Finding artists near you...</p>
+                    </div>
+                ) : filteredArtists.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredArtists.map((artist) => (
+                            <ArtistCard
+                                key={artist.id}
+                                {...artist}
+                                onBook={() => handleBook(artist)}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 px-4">
+                        <div className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center mb-6">
+                            <Music className="w-12 h-12 text-accent" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">No Artists Available Yet</h3>
+                        <p className="text-white/60 text-center max-w-md mb-2">
+                            {userLocation
+                                ? `We're still onboarding artists in your area (${userLocation.address.split(',')[0]}). Check back soon!`
+                                : 'Complete your onboarding to see artists near you.'
+                            }
+                        </p>
+                        <p className="text-white/40 text-sm text-center">
+                            Artists will appear here once they register on the platform.
+                        </p>
                     </div>
                 )}
             </section>

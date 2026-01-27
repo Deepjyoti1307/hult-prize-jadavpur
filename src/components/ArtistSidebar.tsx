@@ -10,8 +10,7 @@ import {
     Wallet,
     Shield,
     Settings,
-    AlertCircle,
-    Music2,
+    Siren,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -30,11 +29,9 @@ export default function ArtistSidebar() {
         <aside className="w-64 h-screen bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col">
             {/* Logo */}
             <div className="p-6 border-b border-white/10">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-accent to-purple-600 rounded-xl flex items-center justify-center">
-                        <Music2 className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-xl font-bold text-white">TARANG</span>
+                <Link href="/" className="flex flex-col">
+                    <span className="text-2xl font-bold text-white italic">TARANG</span>
+                    <span className="text-xs text-white/50">Where music finds its stage</span>
                 </Link>
             </div>
 
@@ -67,12 +64,28 @@ export default function ArtistSidebar() {
                 })}
             </nav>
 
-            {/* Emergency Help */}
+            {/* Emergency Button - Movie Style */}
             <div className="p-4 border-t border-white/10">
-                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all">
-                    <AlertCircle className="w-5 h-5" />
-                    <span className="font-medium">Emergency Help</span>
-                </button>
+                <Link href="/artist/emergency">
+                    <div className="relative group cursor-pointer">
+                        {/* Pulsing background glow */}
+                        <div className="absolute inset-0 bg-red-500/20 rounded-2xl blur-lg group-hover:bg-red-500/30 transition-all animate-pulse" />
+
+                        {/* Button */}
+                        <div
+                            className="relative w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 border-2 border-red-400/50 shadow-lg shadow-red-500/30 group-hover:shadow-red-500/50 group-hover:scale-[1.02] transition-all duration-300"
+                            style={{
+                                boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.1), inset 0 -2px 10px rgba(0,0,0,0.2), 0 4px 20px rgba(239,68,68,0.4)',
+                            }}
+                        >
+                            {/* Inner highlight */}
+                            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3/4 h-2 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
+
+                            <Siren className="w-5 h-5 text-white group-hover:animate-pulse" />
+                            <span className="font-bold text-white tracking-wide">SOS Emergency</span>
+                        </div>
+                    </div>
+                </Link>
             </div>
         </aside>
     );

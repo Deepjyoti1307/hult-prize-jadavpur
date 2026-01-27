@@ -11,7 +11,6 @@ import {
     MessageSquare,
     Settings,
     LogOut,
-    Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -49,14 +48,10 @@ export default function ClientSidebar() {
     return (
         <aside className="w-64 h-screen sticky top-0 bg-[#0a0a0f] border-r border-white/10 flex flex-col p-6">
             {/* Logo area */}
-            <div className="flex items-center gap-3 px-2 mb-10">
-                <div className="w-8 h-8 bg-gradient-to-br from-accent to-purple-600 rounded-lg flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-                    TARANG
-                </span>
-            </div>
+            <Link href="/" className="flex flex-col px-2 mb-10">
+                <span className="text-2xl font-bold text-white italic">TARANG</span>
+                <span className="text-xs text-white/50">Where music finds its stage</span>
+            </Link>
 
             {/* Navigation */}
             <nav className="flex-1 space-y-2">

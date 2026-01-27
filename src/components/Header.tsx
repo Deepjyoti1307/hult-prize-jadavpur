@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Music, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Header() {
@@ -25,11 +25,9 @@ export default function Header() {
         >
             <div className="container-custom flex items-center justify-between px-4 md:px-6">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-full flex items-center justify-center">
-                        <Music className="w-5 h-5 text-accent" />
-                    </div>
-                    <span className="text-xl font-bold text-white">TARANG</span>
+                <Link href="/" className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-white italic">TARANG</span>
+                    <span className="text-xs text-white/60 hidden sm:block">Where music finds its stage</span>
                 </Link>
 
                 {/* Navigation */}

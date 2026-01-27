@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Music, Twitter, Instagram, Linkedin, Heart } from "lucide-react";
+import { Twitter, Instagram, Linkedin, Heart } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -9,11 +9,9 @@ export default function Footer() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     {/* Brand */}
                     <div className="lg:col-span-2">
-                        <Link href="/" className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-full flex items-center justify-center">
-                                <Music className="w-5 h-5 text-accent" />
-                            </div>
-                            <span className="text-xl font-bold">TARANG</span>
+                        <Link href="/" className="flex flex-col gap-1 mb-6">
+                            <span className="text-2xl font-bold text-white italic">TARANG</span>
+                            <span className="text-sm text-white/60">Where music finds its stage</span>
                         </Link>
                         <p className="text-white/60 max-w-md mb-6">
                             A safety-first platform connecting verified artists with clients for live events.

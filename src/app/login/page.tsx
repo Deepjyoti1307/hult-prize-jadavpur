@@ -1,5 +1,6 @@
 'use client';
-import { useState, ChangeEvent, FormEvent, ReactNode } from 'react';
+import { useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
     Ripple,
     TechOrbitDisplay,
@@ -120,6 +121,26 @@ const iconsArray: OrbitIcon[] = [
 ];
 
 export default function LoginPage() {
+    return (
+        <Suspense fallback={<LoginLoading />}>
+            <LoginContent />
+        </Suspense>
+    );
+}
+
+function LoginLoading() {
+    return (
+        <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+            <div className="text-white/60">Loading...</div>
+        </main>
+    );
+}
+
+function LoginContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const userType = searchParams.get('type') || 'client'; // default to client
+
     const [formData, setFormData] = useState<FormData>({
         email: '',
         password: '',
@@ -149,11 +170,20 @@ export default function LoginPage() {
         event.preventDefault();
         console.log('Form submitted', formData);
         // Handle login logic here
+        // After successful login, redirect based on user type
+        // For now, redirect to onboarding (later this should check if onboarding is complete)
+        if (userType === 'artist') {
+            router.push('/artist/onboarding');
+        } else {
+            router.push('/onboarding/client');
+        }
     };
 
     const formFields = {
-        header: 'Welcome to TARANG',
-        subHeader: 'Sign in to connect with amazing artists',
+        header: userType === 'artist' ? 'Artist Sign In' : 'Welcome Back',
+        subHeader: userType === 'artist'
+            ? 'Sign in to your artist account'
+            : 'Sign in to discover and book amazing artists',
         fields: [
             {
                 label: 'Email',
@@ -203,7 +233,7 @@ export default function LoginPage() {
                         <BoxReveal boxColor="var(--skeleton)" duration={0.3}>
                             <p className="mt-8 text-sm text-white/50 text-center">
                                 Don&apos;t have an account?{' '}
-                                <a href="/signup" className="text-accent hover:underline font-medium">
+                                <a href={`/signup?type=${userType}`} className="text-accent hover:underline font-medium">
                                     Sign up
                                 </a>
                             </p>
