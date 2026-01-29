@@ -1,19 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/auth-context';
 import {
     ArtistOnboarding,
     VerificationStep,
     VerificationBadge,
 } from '@/components/ui/artist-onboarding';
-import {
-    OTPVerificationModal,
-} from '@/components/ui/verification-modals';
 import Footer from '@/components/Footer';
 import {
-    Phone,
     FileText,
     MapPin,
     ShieldCheck,
@@ -340,9 +339,10 @@ function LocationModal({
 
 export default function ClientOnboardingPage() {
     const router = useRouter();
+    const { user, profile } = useAuth();
+    const userId = user?.uid ?? null;
 
     // Modal states
-    const [showOTPModal, setShowOTPModal] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showFormModal, setShowFormModal] = useState(false);
 
@@ -354,32 +354,59 @@ export default function ClientOnboardingPage() {
 
     // Verification status
     const [verificationStatus, setVerificationStatus] = useState({
-        mobile: false,
         profile: false,
         location: false,
     });
 
+    useEffect(() => {
+        if (profile?.clientVerification) {
+            setVerificationStatus({
+                profile: Boolean(profile.clientVerification.profile),
+                location: Boolean(profile.clientVerification.location),
+            });
+        }
+        if (profile?.location?.address) {
+            setUserData({
+                location: profile.location.address,
+                coords: profile.location.coords ?? null,
+            });
+        }
+    }, [profile]);
+
+    const saveClientProfile = async (
+        updates: Partial<typeof verificationStatus>,
+        dataUpdates?: { location?: { address: string; coords: { lat: number; lng: number } | null }; phoneNumber?: string }
+    ) => {
+        if (!userId) return;
+        const profileRef = doc(db, 'users', userId);
+        await setDoc(
+            profileRef,
+            {
+                role: 'client',
+                clientVerification: {
+                    ...verificationStatus,
+                    ...updates,
+                },
+                ...(dataUpdates ?? {}),
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
+    };
+
     // Handle Google Form completion confirmation
     const handleFormConfirm = () => {
         setVerificationStatus(prev => ({ ...prev, profile: true }));
+        saveClientProfile({ profile: true });
     };
 
     // Build steps based on verification status
     const getSteps = (): VerificationStep[] => [
         {
-            id: 'mobile',
-            icon: <Phone className="w-5 h-5 text-accent" />,
-            title: verificationStatus.mobile ? 'Mobile Number Verified' : 'Verify Mobile Number',
-            description: verificationStatus.mobile ? 'OTP Verified' : 'Verify with OTP for security',
-            status: verificationStatus.mobile ? 'completed' : 'action',
-            actionText: verificationStatus.mobile ? undefined : 'Verify',
-            onAction: () => setShowOTPModal(true),
-        },
-        {
             id: 'profile',
             icon: <FileText className="w-5 h-5 text-white/70" />,
             title: verificationStatus.profile ? 'Profile Form Submitted' : 'Complete Your Profile',
-            description: verificationStatus.profile ? 'Form Completed' : 'Fill out the profile form',
+            description: verificationStatus.profile ? 'Form Completed' : 'Optional for now',
             status: verificationStatus.profile ? 'completed' : 'action',
             actionText: verificationStatus.profile ? undefined : 'Fill Form',
             onAction: () => setShowFormModal(true),
@@ -406,20 +433,14 @@ export default function ClientOnboardingPage() {
     const handleLocationSave = (location: string, coords: { lat: number; lng: number }) => {
         setUserData(prev => ({ ...prev, location, coords }));
         setVerificationStatus(prev => ({ ...prev, location: true }));
-    };
-
-    const handleOTPVerify = (otp: string, phoneNumber: string) => {
-        console.log('OTP verified:', otp, 'Phone:', phoneNumber);
-        setVerificationStatus(prev => ({ ...prev, mobile: true }));
+        saveClientProfile({ location: true }, { location: { address: location, coords } });
     };
 
     const handleStartBooking = () => {
-        const allCompleted = verificationStatus.mobile &&
-            verificationStatus.profile &&
-            verificationStatus.location;
+        const allCompleted = verificationStatus.location;
 
         if (!allCompleted) {
-            alert('Please complete all steps before continuing.');
+            alert('Please set your location before continuing.');
             return;
         }
 
@@ -429,6 +450,8 @@ export default function ClientOnboardingPage() {
             coords: userData.coords,
         }));
         localStorage.setItem('onboardingComplete', 'true');
+
+        saveClientProfile({ location: true, profile: verificationStatus.profile });
 
         console.log('Onboarding complete - redirecting to dashboard');
         router.push('/client/dashboard');
@@ -459,13 +482,6 @@ export default function ClientOnboardingPage() {
                     </div>
                 </div>
             </section>
-
-            {/* OTP Verification Modal */}
-            <OTPVerificationModal
-                isOpen={showOTPModal}
-                onClose={() => setShowOTPModal(false)}
-                onVerify={handleOTPVerify}
-            />
 
             {/* Location Modal */}
             <LocationModal

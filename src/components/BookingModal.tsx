@@ -2,22 +2,67 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Calendar, Clock, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useAuth } from '@/contexts/auth-context';
 
 interface BookingModalProps {
     isOpen: boolean;
     onClose: () => void;
+    artistId: string;
     artistName: string;
     artistImage: string;
+    artistPrice?: number;
 }
 
-export default function BookingModal({ isOpen, onClose, artistName }: BookingModalProps) {
+export default function BookingModal({
+    isOpen,
+    onClose,
+    artistId,
+    artistName,
+    artistImage,
+    artistPrice = 15000,
+}: BookingModalProps) {
     const [step, setStep] = useState(1);
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const [duration, setDuration] = useState(2);
+    const [location, setLocation] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const { createBooking } = useAuth();
+
+    const totalPrice = useMemo(() => artistPrice, [artistPrice]);
 
     // Reset state on close
     const handleClose = () => {
         setStep(1);
+        setDate('');
+        setTime('');
+        setDuration(2);
+        setLocation('');
         onClose();
+    };
+
+    const handleProceed = () => {
+        if (!date || !time || !location) return;
+        setStep(2);
+    };
+
+    const handleConfirmBooking = async () => {
+        if (submitting) return;
+        setSubmitting(true);
+        await createBooking({
+            artistId,
+            artistName,
+            artistImage,
+            date,
+            time,
+            durationHours: duration,
+            location,
+            fee: totalPrice,
+            status: 'Pending',
+        });
+        setSubmitting(false);
+        setStep(3);
     };
 
     return (
@@ -63,6 +108,8 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                                 <input
                                                     type="date"
+                                                    value={date}
+                                                    onChange={(event) => setDate(event.target.value)}
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-10 py-3 text-white outline-none focus:border-accent/50 transition-colors"
                                                 />
                                             </div>
@@ -75,6 +122,8 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                                     <input
                                                         type="time"
+                                                        value={time}
+                                                        onChange={(event) => setTime(event.target.value)}
                                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-10 py-3 text-white outline-none focus:border-accent/50 transition-colors"
                                                     />
                                                 </div>
@@ -84,6 +133,9 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                                 <input
                                                     type="number"
                                                     placeholder="2"
+                                                    value={duration}
+                                                    min={1}
+                                                    onChange={(event) => setDuration(Number(event.target.value || 1))}
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-accent/50 transition-colors"
                                                 />
                                             </div>
@@ -96,6 +148,8 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                                 <input
                                                     type="text"
                                                     placeholder="Enter venue address"
+                                                    value={location}
+                                                    onChange={(event) => setLocation(event.target.value)}
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-10 py-3 text-white outline-none focus:border-accent/50 transition-colors"
                                                 />
                                             </div>
@@ -106,8 +160,8 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                         <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                             <h3 className="text-white font-bold mb-2">Payment Summary</h3>
                                             <div className="flex justify-between text-white/60 text-sm mb-1">
-                                                <span>Artist Fee (4 Hours)</span>
-                                                <span>₹15,000</span>
+                                                <span>Artist Fee ({duration} Hours)</span>
+                                                <span>₹{totalPrice.toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between text-white/60 text-sm mb-1">
                                                 <span>Service Fee</span>
@@ -115,7 +169,7 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                                             </div>
                                             <div className="border-t border-white/10 my-2 pt-2 flex justify-between text-white font-bold">
                                                 <span>Total to Pay</span>
-                                                <span>₹15,500</span>
+                                                <span>₹{(totalPrice + 500).toLocaleString()}</span>
                                             </div>
                                         </div>
 
@@ -151,17 +205,19 @@ export default function BookingModal({ isOpen, onClose, artistName }: BookingMod
                             <div className="p-6 border-t border-white/10 bg-white/5">
                                 {step === 1 ? (
                                     <button
-                                        onClick={() => setStep(2)}
+                                        onClick={handleProceed}
+                                        disabled={!date || !time || !location}
                                         className="w-full py-3 bg-accent hover:bg-accent-light text-white font-bold rounded-xl transition-all shadow-lg shadow-accent/20"
                                     >
                                         Proceed to Payment
                                     </button>
                                 ) : step === 2 ? (
                                     <button
-                                        onClick={() => setStep(3)}
+                                        onClick={handleConfirmBooking}
+                                        disabled={submitting}
                                         className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-500/20"
                                     >
-                                        Pay Securely & Book
+                                        {submitting ? 'Booking...' : 'Pay Securely & Book'}
                                     </button>
                                 ) : (
                                     <button

@@ -1,28 +1,18 @@
 'use client';
 
-import { Calendar, Clock, MapPin, MoreVertical, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, MoreVertical, CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-
-const BOOKINGS = [
-    {
-        id: 1,
-        artist: 'The Midnight Jazz',
-        date: '2026-06-15',
-        time: '19:00',
-        location: 'Taj Land\'s End, Mumbai',
-        status: 'Confirmed',
-        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
-    },
-
-];
+import { useAuth } from '@/contexts/auth-context';
 
 export default function BookingsPage() {
+    const { bookings } = useAuth();
+
     return (
         <div className="min-h-screen p-8">
             <h1 className="text-3xl font-bold text-white mb-8">My Bookings</h1>
 
             <div className="space-y-4 max-w-5xl">
-                {BOOKINGS.map((booking) => (
+                {bookings.map((booking) => (
                     <div
                         key={booking.id}
                         className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center gap-6 hover:bg-white/10 transition-all"
@@ -30,8 +20,8 @@ export default function BookingsPage() {
                         {/* Image */}
                         <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
                             <Image
-                                src={booking.image}
-                                alt={booking.artist}
+                                src={booking.artistImage}
+                                alt={booking.artistName}
                                 fill
                                 className="object-cover"
                             />
@@ -40,7 +30,7 @@ export default function BookingsPage() {
                         {/* Info */}
                         <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-xl font-bold text-white">{booking.artist}</h3>
+                                <h3 className="text-xl font-bold text-white">{booking.artistName}</h3>
                                 <StatusBadge status={booking.status} />
                             </div>
 
@@ -67,6 +57,12 @@ export default function BookingsPage() {
                     </div>
                 ))}
             </div>
+
+            {bookings.length === 0 && (
+                <div className="text-center py-20">
+                    <p className="text-white/40">No bookings yet.</p>
+                </div>
+            )}
         </div>
     );
 }

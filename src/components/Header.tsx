@@ -4,9 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -56,6 +60,14 @@ export default function Header() {
                     >
                         For Clients
                     </Link>
+                    {user && (
+                        <button
+                            onClick={() => signOut(auth)}
+                            className="text-white/60 hover:text-white transition-colors duration-300 font-medium text-sm"
+                        >
+                            Logout
+                        </button>
+                    )}
                 </nav>
 
 

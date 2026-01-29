@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useAuth } from '@/contexts/auth-context';
 import { Search, MapPin, SlidersHorizontal, ChevronDown, AlertTriangle, Music, Loader2 } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
@@ -30,11 +31,11 @@ export default function ClientDashboard() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-    const [artists, setArtists] = useState<Artist[]>([]);
+    const { profile, artists, artistsLoading } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [incidentModalOpen, setIncidentModalOpen] = useState(false);
-    const [selectedArtist, setSelectedArtist] = useState<{ name: string; image: string } | null>(null);
+    const [selectedArtist, setSelectedArtist] = useState<{ id: string; name: string; image: string; price: number } | null>(null);
 
     // Load user location from localStorage on mount
     useEffect(() => {
@@ -51,8 +52,23 @@ export default function ClientDashboard() {
         setIsLoading(false);
     }, []);
 
+    useEffect(() => {
+        if (profile?.location?.address) {
+            setUserLocation({
+                address: profile.location.address,
+                coords: profile.location.coords ?? null,
+            });
+        }
+    }, [profile]);
+
+    useEffect(() => {
+        if (!artistsLoading) {
+            setIsLoading(false);
+        }
+    }, [artistsLoading]);
+
     const handleBook = (artist: Artist) => {
-        setSelectedArtist({ name: artist.name, image: artist.image });
+        setSelectedArtist({ id: artist.id, name: artist.name, image: artist.image, price: artist.price });
         setBookingModalOpen(true);
     };
 
@@ -91,11 +107,42 @@ export default function ClientDashboard() {
                     {/* User Profile */}
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-accent p-[2px]">
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                            <span className="text-white font-bold text-xs">JD</span>
+                            <span className="text-white font-bold text-xs">
+                                {(profile?.name || 'Client')
+                                    .split(' ')
+                                    .map((part) => part[0])
+                                    .slice(0, 2)
+                                    .join('')
+                                    .toUpperCase()}
+                            </span>
                         </div>
                     </div>
                 </div>
             </header>
+
+            {/* Profile Summary */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-10">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-white/60 text-sm">Profile</p>
+                        <h2 className="text-white text-xl font-semibold">
+                            {profile?.name || 'Client'}
+                        </h2>
+                        {profile?.email && (
+                            <p className="text-white/50 text-sm">{profile.email}</p>
+                        )}
+                    </div>
+                    <div className="text-right">
+                        <p className="text-white/60 text-sm">Account</p>
+                        <p className="text-white text-lg font-semibold">
+                            {profile?.role || 'client'}
+                        </p>
+                        <p className="text-white/40 text-xs uppercase tracking-wide">
+                            {userLocation?.address || 'Location not set'}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Search & Filters */}
             <section className="mb-10 space-y-6">
@@ -209,8 +256,10 @@ export default function ClientDashboard() {
             <BookingModal
                 isOpen={bookingModalOpen}
                 onClose={() => setBookingModalOpen(false)}
+                artistId={selectedArtist?.id || ''}
                 artistName={selectedArtist?.name || ''}
                 artistImage={selectedArtist?.image || ''}
+                artistPrice={selectedArtist?.price}
             />
 
             <IncidentModal

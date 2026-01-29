@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
@@ -13,6 +13,8 @@ import {
     LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const sidebarItems = [
     {
@@ -44,6 +46,12 @@ const sidebarItems = [
 
 export default function ClientSidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await signOut(auth);
+        router.replace('/login?type=client');
+    };
 
     return (
         <aside className="w-64 h-screen sticky top-0 bg-[#0a0a0f] border-r border-white/10 flex flex-col p-6">
@@ -95,7 +103,10 @@ export default function ClientSidebar() {
                     <Settings className="w-5 h-5" />
                     <span className="font-medium">Settings</span>
                 </button>
-                <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Logout</span>
                 </button>

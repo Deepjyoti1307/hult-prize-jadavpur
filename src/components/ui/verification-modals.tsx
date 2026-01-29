@@ -4,6 +4,13 @@ import { memo, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import {
+    ConfirmationResult,
+    RecaptchaVerifier,
+    linkWithPhoneNumber,
+    signInWithPhoneNumber,
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import {
     X,
     Upload,
     FileCheck,
@@ -247,6 +254,16 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
     const [resending, setResending] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+    const confirmationRef = useRef<ConfirmationResult | null>(null);
+
+    const getRecaptchaVerifier = () => {
+        if (recaptchaRef.current) return recaptchaRef.current;
+        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+        });
+        return recaptchaRef.current;
+    };
 
     // Format phone display (mask middle digits)
     const getMaskedPhone = () => {
@@ -271,20 +288,44 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
         }
 
         setSending(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setSending(false);
-        setStep('otp');
-        setResendTimer(30);
+        setError(null);
+        try {
+            const appVerifier = getRecaptchaVerifier();
+            const fullNumber = `+91${phoneNumber}`;
+            if (auth.currentUser) {
+                confirmationRef.current = await linkWithPhoneNumber(
+                    auth.currentUser,
+                    fullNumber,
+                    appVerifier
+                );
+            } else {
+                confirmationRef.current = await signInWithPhoneNumber(
+                    auth,
+                    fullNumber,
+                    appVerifier
+                );
+            }
+            setStep('otp');
+            setResendTimer(30);
 
-        const interval = setInterval(() => {
-            setResendTimer(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+            const interval = setInterval(() => {
+                setResendTimer(prev => {
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to send OTP. Please try again.';
+            setError(message);
+        } finally {
+            setSending(false);
+        }
     };
 
     const handleOTPChange = (index: number, value: string) => {
@@ -327,27 +368,65 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
         }
 
         setVerifying(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        onVerify(otpString, phoneNumber);
-        setVerifying(false);
-        handleClose();
+        setError(null);
+        try {
+            if (!confirmationRef.current) {
+                setError('Please request a new OTP.');
+                return;
+            }
+            await confirmationRef.current.confirm(otpString);
+            onVerify(otpString, `+91${phoneNumber}`);
+            handleClose();
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : 'Invalid OTP. Please try again.';
+            setError(message);
+        } finally {
+            setVerifying(false);
+        }
     };
 
     const handleResend = async () => {
         setResending(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setResending(false);
-        setResendTimer(30);
+        setError(null);
+        try {
+            const appVerifier = getRecaptchaVerifier();
+            const fullNumber = `+91${phoneNumber}`;
+            if (auth.currentUser) {
+                confirmationRef.current = await linkWithPhoneNumber(
+                    auth.currentUser,
+                    fullNumber,
+                    appVerifier
+                );
+            } else {
+                confirmationRef.current = await signInWithPhoneNumber(
+                    auth,
+                    fullNumber,
+                    appVerifier
+                );
+            }
+            setResendTimer(30);
 
-        const interval = setInterval(() => {
-            setResendTimer(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+            const interval = setInterval(() => {
+                setResendTimer(prev => {
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to resend OTP. Please try again.';
+            setError(message);
+        } finally {
+            setResending(false);
+        }
     };
 
     const handleBack = () => {
@@ -361,6 +440,9 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
         setPhoneNumber('');
         setOtp(['', '', '', '', '', '']);
         setError(null);
+        confirmationRef.current = null;
+        recaptchaRef.current?.clear();
+        recaptchaRef.current = null;
         onClose();
     };
 
@@ -383,6 +465,7 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
                     className="bg-[#0f1419] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
+                    <div id="recaptcha-container" />
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">

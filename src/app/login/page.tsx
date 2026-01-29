@@ -2,6 +2,12 @@
 import { useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
+    GoogleAuthProvider,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import {
     Ripple,
     TechOrbitDisplay,
     AnimatedForm,
@@ -145,6 +151,8 @@ function LoginContent() {
         email: '',
         password: '',
     });
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const goToForgotPassword = (
         event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
@@ -168,14 +176,51 @@ function LoginContent() {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Form submitted', formData);
-        // Handle login logic here
-        // After successful login, redirect based on user type
-        // For now, redirect to onboarding (later this should check if onboarding is complete)
-        if (userType === 'artist') {
-            router.push('/artist/onboarding');
-        } else {
-            router.push('/onboarding/client');
+        if (isSubmitting) return;
+        setErrorMessage('');
+        setIsSubmitting(true);
+        try {
+            await signInWithEmailAndPassword(
+                auth,
+                formData.email,
+                formData.password
+            );
+            if (userType === 'artist') {
+                router.push('/artist/onboarding');
+            } else {
+                router.push('/onboarding/client');
+            }
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to sign in. Please try again.';
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        if (isSubmitting) return;
+        setErrorMessage('');
+        setIsSubmitting(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            if (userType === 'artist') {
+                router.push('/artist/onboarding');
+            } else {
+                router.push('/onboarding/client');
+            }
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to sign in with Google.';
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -228,6 +273,8 @@ function LoginContent() {
                             onSubmit={handleSubmit}
                             goTo={goToForgotPassword}
                             googleLogin="Login with Google"
+                            onGoogleLogin={handleGoogleLogin}
+                            errorField={errorMessage}
                         />
 
                         <BoxReveal boxColor="var(--skeleton)" duration={0.3}>

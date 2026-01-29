@@ -3,29 +3,43 @@
 import { ArrowLeft, Star, MapPin, Music, Play, Share2, Heart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import BookingModal from '@/components/BookingModal';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function ArtistDetailsPage({ params }: { params: { id: string } }) {
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
+    const { artists, favorites, toggleFavorite } = useAuth();
 
-    // Mock Data - In real app, fetch based on params.id
-    const artist = {
-        name: 'The Midnight Jazz',
-        category: 'Jazz Band',
-        image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
-        rating: 4.8,
-        reviews: 124,
-        location: 'Mumbai, MH',
-        price: 15000,
-        bio: 'The Midnight Jazz is a premium jazz ensemble based in Mumbai, specializing in smooth jazz, bossa nova, and classic standards. Perfect for corporate events, weddings, and upscale cocktail parties. With over 10 years of experience, we bring sophisticated ambience to any venue.',
-        tags: ['Jazz', 'Live Music', 'Saxophone', 'Instrumental'],
-        gallery: [
-            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1459749411177-d4a428948843?q=80&w=2670&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=2670&auto=format&fit=crop',
-        ]
-    };
+    const artist = useMemo(() => {
+        const found = artists.find((item) => item.id === params.id);
+        if (found) {
+            return {
+                ...found,
+                reviews: 0,
+                bio: 'Artist bio will appear here.',
+                tags: [found.category],
+                gallery: [found.image],
+            };
+        }
+        return {
+            id: params.id,
+            name: 'Artist',
+            category: 'Live Music',
+            image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
+            rating: 4.8,
+            reviews: 0,
+            location: 'India',
+            price: 15000,
+            bio: 'Artist bio will appear here.',
+            tags: ['Live Music'],
+            gallery: [
+                'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
+            ],
+        };
+    }, [artists, params.id]);
+
+    const isFavorite = favorites.some((item) => item.id === artist.id);
 
     return (
         <div className="min-h-screen relative">
@@ -67,8 +81,11 @@ export default function ArtistDetailsPage({ params }: { params: { id: string } }
                                 <button className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all">
                                     <Share2 className="w-5 h-5" />
                                 </button>
-                                <button className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-pink-500 transition-all">
-                                    <Heart className="w-5 h-5 fill-pink-500" />
+                                <button
+                                    onClick={() => toggleFavorite(artist)}
+                                    className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-pink-500 transition-all"
+                                >
+                                    <Heart className={`w-5 h-5 ${isFavorite ? 'fill-pink-500' : ''}`} />
                                 </button>
                             </div>
                         </div>
@@ -152,8 +169,10 @@ export default function ArtistDetailsPage({ params }: { params: { id: string } }
             <BookingModal
                 isOpen={bookingModalOpen}
                 onClose={() => setBookingModalOpen(false)}
+                artistId={artist.id}
                 artistName={artist.name}
                 artistImage={artist.image}
+                artistPrice={artist.price}
             />
         </div>
     );

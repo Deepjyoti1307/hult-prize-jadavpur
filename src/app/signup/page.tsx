@@ -1,6 +1,14 @@
 'use client';
-import { useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
+import { useEffect, useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import {
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    updateProfile,
+} from 'firebase/auth';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import {
     Ripple,
     TechOrbitDisplay,
@@ -140,13 +148,22 @@ function SignupLoading() {
 function SignupContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const userType = searchParams.get('type') || 'client'; // default to client
+    const initialType = (searchParams.get('type') || 'client') as 'client' | 'artist';
+    const [userType, setUserType] = useState<'client' | 'artist'>(initialType);
+    const onboardingRoute =
+        userType === 'artist' ? '/artist/onboarding' : '/onboarding/client';
+
+    useEffect(() => {
+        setUserType(initialType);
+    }, [initialType]);
 
     const [formData, setFormData] = useState<FormData>({
         name: '',
         email: '',
         password: '',
     });
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const goToLogin = (
         event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
@@ -170,13 +187,104 @@ function SignupContent() {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Form submitted', formData);
-        // Handle signup logic here
-        // After successful signup, redirect based on user type
-        if (userType === 'artist') {
-            router.push('/artist/onboarding');
-        } else {
-            router.push('/onboarding/client');
+        if (isSubmitting) return;
+        setErrorMessage('');
+        setIsSubmitting(true);
+        try {
+            const credential = await createUserWithEmailAndPassword(
+                auth,
+                formData.email,
+                formData.password
+            );
+            await updateProfile(credential.user, { displayName: formData.name });
+            await setDoc(
+                doc(db, 'users', credential.user.uid),
+                {
+                    uid: credential.user.uid,
+                    name: formData.name,
+                    email: formData.email,
+                    role: userType,
+                    createdAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
+
+            if (userType === 'artist') {
+                await setDoc(
+                    doc(db, 'artists', credential.user.uid),
+                    {
+                        name: formData.name,
+                        category: 'Live Music',
+                        image:
+                            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
+                        rating: 4.8,
+                        location: 'India',
+                        price: 15000,
+                        ownerId: credential.user.uid,
+                        createdAt: serverTimestamp(),
+                    },
+                    { merge: true }
+                );
+            }
+
+            router.replace(onboardingRoute);
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to create account. Please try again.';
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleGoogleSignup = async () => {
+        if (isSubmitting) return;
+        setErrorMessage('');
+        setIsSubmitting(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            const credential = await signInWithPopup(auth, provider);
+            await setDoc(
+                doc(db, 'users', credential.user.uid),
+                {
+                    uid: credential.user.uid,
+                    name: credential.user.displayName ?? '',
+                    email: credential.user.email ?? '',
+                    role: userType,
+                    createdAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
+
+            if (userType === 'artist') {
+                await setDoc(
+                    doc(db, 'artists', credential.user.uid),
+                    {
+                        name: credential.user.displayName ?? 'Artist',
+                        category: 'Live Music',
+                        image:
+                            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2664&auto=format&fit=crop',
+                        rating: 4.8,
+                        location: 'India',
+                        price: 15000,
+                        ownerId: credential.user.uid,
+                        createdAt: serverTimestamp(),
+                    },
+                    { merge: true }
+                );
+            }
+
+            router.replace(onboardingRoute);
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to sign up with Google.';
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -231,12 +339,36 @@ function SignupContent() {
                 {/* Right Side - Signup Form with Glassmorphism */}
                 <span className="w-1/2 h-[100dvh] flex flex-col justify-center items-center max-lg:w-full max-lg:px-[5%]">
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-8 md:px-8 md:py-10 shadow-2xl">
+                        <div className="mb-6 flex items-center justify-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setUserType('client')}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${userType === 'client'
+                                    ? 'bg-accent/20 border-accent text-accent'
+                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    }`}
+                            >
+                                I&apos;m a Client
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUserType('artist')}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${userType === 'artist'
+                                    ? 'bg-accent/20 border-accent text-accent'
+                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    }`}
+                            >
+                                I&apos;m an Artist
+                            </button>
+                        </div>
                         <AnimatedForm
                             {...formFields}
                             fieldPerRow={1}
                             onSubmit={handleSubmit}
                             goTo={goToLogin}
                             googleLogin="Sign up with Google"
+                            onGoogleLogin={handleGoogleSignup}
+                            errorField={errorMessage}
                         />
                     </div>
                 </span>

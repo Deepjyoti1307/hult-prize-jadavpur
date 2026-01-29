@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/auth-context';
 import {
     ArtistOnboarding,
     VerificationStep,
@@ -9,11 +12,9 @@ import {
 } from '@/components/ui/artist-onboarding';
 import {
     FileUploadModal,
-    OTPVerificationModal,
 } from '@/components/ui/verification-modals';
 import Footer from '@/components/Footer';
 import {
-    Phone,
     FileCheck,
     Video,
     Music,
@@ -54,32 +55,54 @@ const uploadConfigs: Record<string, UploadConfig> = {
 
 export default function ArtistOnboardingPage() {
     const router = useRouter();
+    const { user, profile } = useAuth();
+    const userId = user?.uid ?? null;
 
     // Modal states
-    const [showOTPModal, setShowOTPModal] = useState(false);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [currentUpload, setCurrentUpload] = useState<UploadType>(null);
 
     // Verification status
     const [verificationStatus, setVerificationStatus] = useState({
-        mobile: false,
         idProof: false,
         introVideo: false,
         performanceClip: false,
         firstGig: false,
     });
 
+    useEffect(() => {
+        if (!profile?.artistVerification) return;
+        setVerificationStatus({
+            idProof: Boolean(profile.artistVerification.idProof),
+            introVideo: Boolean(profile.artistVerification.introVideo),
+            performanceClip: Boolean(profile.artistVerification.performanceClip),
+            firstGig: Boolean(profile.artistVerification.firstGig),
+        });
+    }, [profile]);
+
+    const saveArtistProfile = async (
+        updates: Partial<typeof verificationStatus>,
+        dataUpdates?: { phoneNumber?: string }
+    ) => {
+        if (!userId) return;
+        const profileRef = doc(db, 'users', userId);
+        await setDoc(
+            profileRef,
+            {
+                role: 'artist',
+                artistVerification: {
+                    ...verificationStatus,
+                    ...updates,
+                },
+                ...(dataUpdates ?? {}),
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
+    };
+
     // Build steps based on verification status
     const getSteps = (): VerificationStep[] => [
-        {
-            id: 'mobile',
-            icon: <Phone className="w-5 h-5 text-accent" />,
-            title: verificationStatus.mobile ? 'Mobile Number Verified' : 'Verify Mobile Number',
-            description: verificationStatus.mobile ? 'OTP Verified' : 'Verify with OTP',
-            status: verificationStatus.mobile ? 'completed' : 'action',
-            actionText: verificationStatus.mobile ? undefined : 'Verify',
-            onAction: () => setShowOTPModal(true),
-        },
         {
             id: 'id-proof',
             icon: <FileCheck className="w-5 h-5 text-white/70" />,
@@ -139,25 +162,22 @@ export default function ArtistOnboardingPage() {
         // Update verification status based on upload type
         if (currentUpload === 'id-proof') {
             setVerificationStatus(prev => ({ ...prev, idProof: true }));
+            saveArtistProfile({ idProof: true });
         } else if (currentUpload === 'intro-video') {
             setVerificationStatus(prev => ({ ...prev, introVideo: true }));
+            saveArtistProfile({ introVideo: true });
         } else if (currentUpload === 'performance-clip') {
             setVerificationStatus(prev => ({ ...prev, performanceClip: true }));
+            saveArtistProfile({ performanceClip: true });
         }
 
         setCurrentUpload(null);
     };
 
-    const handleOTPVerify = (otp: string, phoneNumber: string) => {
-        console.log('OTP verified:', otp, 'Phone:', phoneNumber);
-        setVerificationStatus(prev => ({ ...prev, mobile: true }));
-    };
-
     const handleApplyForBadge = () => {
         console.log('Apply for Platform Verified Badge');
         // Check if all required steps are completed
-        const allCompleted = verificationStatus.mobile &&
-            verificationStatus.idProof &&
+        const allCompleted = verificationStatus.idProof &&
             verificationStatus.introVideo &&
             verificationStatus.performanceClip;
 
@@ -200,13 +220,6 @@ export default function ArtistOnboardingPage() {
                     </div>
                 </div>
             </section>
-
-            {/* OTP Verification Modal */}
-            <OTPVerificationModal
-                isOpen={showOTPModal}
-                onClose={() => setShowOTPModal(false)}
-                onVerify={handleOTPVerify}
-            />
 
             {/* File Upload Modal */}
             <FileUploadModal
