@@ -88,63 +88,63 @@ export default function ClientSidebar() {
                 >
                     <X className="w-4 h-4" />
                 </button>
-            {/* Logo area */}
-            <Link href="/" className="flex flex-col px-2 mb-10">
-                <span className="text-2xl font-bold text-white italic">TARANG</span>
-                <span className="text-xs text-white/50">Where music finds its stage</span>
-            </Link>
+                {/* Logo area */}
+                <Link href="/" className="flex flex-col px-2 mb-10">
+                    <span className="text-2xl font-bold text-white italic">TARANG</span>
+                    <span className="text-xs text-white/50">Where music finds its stage</span>
+                </Link>
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-2">
-                {sidebarItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
+                {/* Navigation */}
+                <nav className="flex-1 space-y-2">
+                    {sidebarItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = item.icon;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                                'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
-                                isActive
-                                    ? 'text-white bg-white/10'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                            )}
-                        >
-                            {isActive && (
-                                <motion.div
-                                    layoutId="activeTab"
-                                    className="absolute inset-0 bg-white/10 rounded-xl"
-                                    initial={false}
-                                    transition={{
-                                        type: 'spring',
-                                        stiffness: 300,
-                                        damping: 30,
-                                    }}
-                                />
-                            )}
-                            <Icon className={cn('w-5 h-5 relative z-10', isActive ? 'text-accent' : '')} />
-                            <span className="font-medium relative z-10">{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setOpen(false)}
+                                className={cn(
+                                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative',
+                                    isActive
+                                        ? 'text-white bg-white/10'
+                                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                                )}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute inset-0 bg-white/10 rounded-xl"
+                                        initial={false}
+                                        transition={{
+                                            type: 'spring',
+                                            stiffness: 300,
+                                            damping: 30,
+                                        }}
+                                    />
+                                )}
+                                <Icon className={cn('w-5 h-5 relative z-10', isActive ? 'text-accent' : '')} />
+                                <span className="font-medium relative z-10">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
 
-            {/* User Profile & Logout */}
-            <div className="mt-auto space-y-4 pt-6 border-t border-white/10">
-                <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                    <Settings className="w-5 h-5" />
-                    <span className="font-medium">Settings</span>
-                </button>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
-                >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Logout</span>
-                </button>
-            </div>
+                {/* User Profile & Logout */}
+                <div className="mt-auto space-y-4 pt-6 border-t border-white/10">
+                    <Link href="/client/settings" className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all">
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Settings</span>
+                    </Link>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Logout</span>
+                    </button>
+                </div>
             </aside>
         </>
     );

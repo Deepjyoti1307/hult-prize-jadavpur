@@ -169,15 +169,15 @@ export default function ArtistDashboard() {
                         {/* Profile Summary */}
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-accent/20 transition-all duration-500" />
-                            
+
                             <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                                 {/* Artist Image */}
                                 <div className="relative">
                                     <div className="w-24 h-24 rounded-full p-[2px] bg-gradient-to-tr from-accent to-purple-500">
                                         <div className="w-full h-full rounded-full overflow-hidden bg-[#0a0a0f] relative">
                                             {currentArtist?.image ? (
-                                                <img 
-                                                    src={currentArtist.image} 
+                                                <img
+                                                    src={currentArtist.image}
                                                     alt={currentArtist.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -272,7 +272,7 @@ export default function ArtistDashboard() {
                                         >
                                             {/* Top Banner / Ticket Stub Look */}
                                             <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-accent opacity-50 group-hover:opacity-100 transition-opacity" />
-                                            
+
                                             <div className="p-6">
                                                 <div className="flex items-start justify-between mb-6">
                                                     <div className="flex items-center gap-4">

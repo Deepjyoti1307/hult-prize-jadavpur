@@ -22,7 +22,7 @@ export default function ArtistMessages() {
         <div className="min-h-screen bg-[#0a0a0f] flex relative">
             <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
             <ArtistSidebar />
-            
+
             <main className="flex-1 relative z-10 flex flex-col h-screen pt-20">
                 <div className="flex-1 flex overflow-hidden p-6 gap-6">
                     {/* Contacts List */}
@@ -31,14 +31,14 @@ export default function ArtistMessages() {
                             <h2 className="text-xl font-bold text-white mb-4">Messages</h2>
                             <div className="relative">
                                 <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search chats..." 
+                                <input
+                                    type="text"
+                                    placeholder="Search chats..."
                                     className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white text-sm focus:outline-none focus:border-accent/50"
                                 />
                             </div>
                         </div>
-                        
+
                         <div className="flex-1 overflow-y-auto p-2 space-y-2">
                             {contacts.map(contact => (
                                 <div key={contact.id} className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-all ${contact.id === 1 ? 'bg-white/10' : ''}`}>
@@ -101,7 +101,7 @@ export default function ArtistMessages() {
                             <div className="flex justify-center">
                                 <span className="bg-white/5 text-white/40 text-xs px-3 py-1 rounded-full">Today</span>
                             </div>
-                            
+
                             <div className="flex justify-end">
                                 <div className="bg-accent text-white p-3 rounded-2xl rounded-tr-sm max-w-[80%]">
                                     <p>Hi Priya! Just confirming the equipment details for Saturday.</p>
@@ -133,9 +133,9 @@ export default function ArtistMessages() {
                                 <button className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-accent transition-all">
                                     <Mic className="w-5 h-5" />
                                 </button>
-                                <input 
-                                    type="text" 
-                                    placeholder="Type a message..." 
+                                <input
+                                    type="text"
+                                    placeholder="Type a message..."
                                     className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-accent/50 placeholder:text-white/30"
                                 />
                                 <button className="p-2.5 bg-accent hover:bg-accent-light text-white rounded-xl transition-all shadow-lg shadow-accent/20">

@@ -19,7 +19,7 @@ export default function ArtistSafety() {
         <div className="min-h-screen bg-[#0a0a0f] flex relative">
             <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
             <ArtistSidebar />
-            
+
             <main className="flex-1 overflow-y-auto relative z-10">
                 <div className="p-8 pt-20">
                     <div className="mb-8">
@@ -33,7 +33,7 @@ export default function ArtistSafety() {
                             <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-30 transition-opacity">
                                 <AlertTriangle className="w-32 h-32 text-red-500" />
                             </div>
-                            
+
                             <div className="relative z-10">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-3 bg-red-500/20 rounded-xl text-red-400">
@@ -67,7 +67,7 @@ export default function ArtistSafety() {
                                             <p className="text-white/60 text-sm">Valid only during active gigs</p>
                                         </div>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => setSharingLocation(!sharingLocation)}
                                         className={`w-14 h-8 rounded-full transition-colors relative ${sharingLocation ? 'bg-accent' : 'bg-white/10'}`}
                                     >
@@ -91,8 +91,8 @@ export default function ArtistSafety() {
                                     <div className="flex-1">
                                         <h3 className="text-white font-bold text-lg">Identity Verification</h3>
                                         <p className="text-white/60 text-sm">
-                                            {profile?.adminApproval?.status === 'approved' 
-                                                ? 'Your account is verified. This builds trust with clients.' 
+                                            {profile?.adminApproval?.status === 'approved'
+                                                ? 'Your account is verified. This builds trust with clients.'
                                                 : 'Verification Pending.'}
                                         </p>
                                     </div>

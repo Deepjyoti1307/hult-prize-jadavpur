@@ -21,7 +21,7 @@ export default function ArtistEarnings() {
         <div className="min-h-screen bg-[#0a0a0f] flex relative">
             <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
             <ArtistSidebar />
-            
+
             <main className="flex-1 overflow-y-auto relative z-10">
                 <div className="p-8 pt-20">
                     <div className="flex items-center justify-between mb-8">
@@ -87,7 +87,7 @@ export default function ArtistEarnings() {
                         <div className="h-64 flex items-end justify-between gap-4 px-4 pb-4 border-b border-white/10">
                             {[40, 60, 45, 90, 30, 75, 50, 80, 60, 95, 85, 100].map((h, i) => (
                                 <div key={i} className="w-full bg-white/5 rounded-t-lg relative group h-full flex items-end">
-                                    <div 
+                                    <div
                                         className="w-full bg-gradient-to-t from-accent/50 to-accent rounded-t-lg transition-all duration-500 group-hover:bg-accent-light"
                                         style={{ height: `${h}%` }}
                                     />
@@ -116,8 +116,8 @@ export default function ArtistEarnings() {
                                 <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                                            {tx.status === 'Completed' ? 
-                                                <ArrowUpRight className="w-5 h-5 text-green-400 rotate-45" /> : 
+                                            {tx.status === 'Completed' ?
+                                                <ArrowUpRight className="w-5 h-5 text-green-400 rotate-45" /> :
                                                 <Clock className="w-5 h-5 text-yellow-400" />
                                             }
                                         </div>

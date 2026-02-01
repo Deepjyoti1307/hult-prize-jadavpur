@@ -28,7 +28,7 @@ export default function ArtistSettings() {
         <div className="min-h-screen bg-[#0a0a0f] flex relative">
             <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
             <ArtistSidebar />
-            
+
             <main className="flex-1 overflow-y-auto relative z-10">
                 <div className="p-8 pt-20 max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-8">
@@ -46,7 +46,7 @@ export default function ArtistSettings() {
                         {/* Profile Picture & Basic Info */}
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                             <h2 className="text-xl font-bold text-white mb-6">Public Profile</h2>
-                            
+
                             <div className="flex flex-col md:flex-row gap-8 items-start">
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="w-32 h-32 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center relative group cursor-pointer overflow-hidden">
@@ -62,8 +62,8 @@ export default function ArtistSettings() {
                                         <label className="text-white/60 text-sm font-medium">Display Name</label>
                                         <div className="relative">
                                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 defaultValue={profile?.name || ''}
                                                 className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                             />
@@ -82,7 +82,7 @@ export default function ArtistSettings() {
 
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-white/60 text-sm font-medium">Bio</label>
-                                        <textarea 
+                                        <textarea
                                             rows={4}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white focus:border-accent/50 focus:outline-none transition-colors resize-none"
                                             placeholder="Tell clients about your style, experience, and what makes you unique..."
@@ -100,8 +100,8 @@ export default function ArtistSettings() {
                                     <label className="text-white/60 text-sm font-medium">Email Address</label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                                        <input 
-                                            type="email" 
+                                        <input
+                                            type="email"
                                             defaultValue={profile?.email || ''}
                                             disabled
                                             className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-3 text-white/50 cursor-not-allowed"
@@ -112,8 +112,8 @@ export default function ArtistSettings() {
                                     <label className="text-white/60 text-sm font-medium">Phone Number</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                                        <input 
-                                            type="tel" 
+                                        <input
+                                            type="tel"
                                             defaultValue={profile?.phoneNumber || ''}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                         />
@@ -123,8 +123,8 @@ export default function ArtistSettings() {
                                     <label className="text-white/60 text-sm font-medium">Base Location</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             defaultValue={profile?.location?.address || ''}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                             placeholder="e.g. Mumbai, Maharashtra"
@@ -161,7 +161,7 @@ export default function ArtistSettings() {
                         <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
                             <h2 className="text-red-400 font-bold text-xl mb-4">Account Actions</h2>
                             <div className="flex gap-4">
-                                <button 
+                                <button
                                     onClick={handleLogout}
                                     className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl font-medium transition-all"
                                 >

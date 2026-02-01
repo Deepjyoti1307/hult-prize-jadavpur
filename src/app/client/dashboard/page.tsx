@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { Search, MapPin, SlidersHorizontal, ChevronDown, AlertTriangle, Music, Loader2 } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, AlertTriangle, Sparkles, Filter, Music, Loader2 } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
 import IncidentModal from '@/components/IncidentModal';
+import { useRouter } from 'next/navigation';
 
-// Artist type definition
 interface Artist {
     id: string;
     name: string;
@@ -20,13 +19,12 @@ interface Artist {
     price: number;
 }
 
-// User location type
 interface UserLocation {
     address: string;
     coords: { lat: number; lng: number } | null;
 }
 
-const CATEGORIES = ['All', 'Live Bands', 'DJs', 'Solo Singers', 'Classical', 'Folk'];
+const CATEGORIES = ['All', 'Live Bands', 'DJs', 'Solo Singers', 'Classical', 'Folk', 'Jazz', 'Instrumental'];
 
 export default function ClientDashboard() {
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -36,25 +34,19 @@ export default function ClientDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [incidentModalOpen, setIncidentModalOpen] = useState(false);
-    const [selectedArtist, setSelectedArtist] = useState<{ id: string; name: string; image: string; price: number } | null>(null);
+    const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         renderCanvas();
         return () => stopCanvas();
     }, []);
 
-    // Load user location from localStorage on mount
     useEffect(() => {
         const storedLocation = localStorage.getItem('userLocation');
         if (storedLocation) {
-            const location = JSON.parse(storedLocation) as UserLocation;
-            setUserLocation(location);
+            setUserLocation(JSON.parse(storedLocation));
         }
-
-        // TODO: Fetch artists from backend based on location
-        // For now, we'll show empty state since we don't have backend yet
-        // Once backend is integrated, replace this with actual API call:
-        // fetchArtistsByLocation(location.coords?.lat, location.coords?.lng)
         setIsLoading(false);
     }, []);
 
@@ -68,14 +60,16 @@ export default function ClientDashboard() {
     }, [profile]);
 
     useEffect(() => {
-        if (!artistsLoading) {
-            setIsLoading(false);
-        }
+        if (!artistsLoading) setIsLoading(false);
     }, [artistsLoading]);
 
     const handleBook = (artist: Artist) => {
-        setSelectedArtist({ id: artist.id, name: artist.name, image: artist.image, price: artist.price });
+        setSelectedArtist(artist);
         setBookingModalOpen(true);
+    };
+
+    const handleCardClick = (id: string) => {
+        router.push(`/client/artist/${id}`);
     };
 
     const filteredArtists = artists.filter(artist => {
@@ -86,191 +80,122 @@ export default function ClientDashboard() {
     });
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] relative">
-            {/* Full-page canvas background */}
-            <canvas
-                className="pointer-events-none fixed inset-0 z-0"
-                id="canvas"
-            />
+        <div className="min-h-screen bg-[#0a0a0f] relative font-sans text-slate-200 selection:bg-accent/30">
+            <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
 
-            <div className="p-8 pt-20 relative z-10">
-            {/* Header Section */}
-            <header className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Discover Artists</h1>
-                    <p className="text-white/60">Find the perfect talent for your event</p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    {/* Incident Button */}
-                    <button
-                        onClick={() => setIncidentModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500/20 transition-all font-medium text-sm"
-                    >
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>Report Issue</span>
-                    </button>
-
-                    {/* Location Display */}
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white">
-                        <MapPin className="w-4 h-4 text-accent" />
-                        <span className="max-w-[200px] truncate">{userLocation?.address || 'Location not set'}</span>
+            <div className="p-6 md:p-8 pt-20 relative z-10 max-w-7xl mx-auto space-y-8">
+                {/* Header Section */}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                                Hello, {profile?.name?.split(' ')[0] || 'Client'}
+                            </h1>
+                            <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+                        </div>
+                        <p className="text-white/60 text-lg max-w-xl">Find and book the perfect sound for your next event.</p>
                     </div>
 
-                    {/* User Profile */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-accent p-[2px]">
-                        <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                            <span className="text-white font-bold text-xs">
-                                {(profile?.name || 'Client')
-                                    .split(' ')
-                                    .map((part) => part[0])
-                                    .slice(0, 2)
-                                    .join('')
-                                    .toUpperCase()}
-                            </span>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIncidentModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl font-medium transition-all hover:scale-105 active:scale-95"
+                        >
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="hidden sm:inline">Report Issue</span>
+                        </button>
+                    </div>
+                </header>
+
+                {/* Search & Filter Bar */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-2 sticky top-5 z-20 shadow-2xl shadow-black/50 ring-1 ring-white/5">
+                    <div className="flex flex-col md:flex-row gap-2">
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-accent transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, category, or genre..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-transparent border-0 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-white/30 focus:ring-2 focus:ring-accent/50 transition-all font-medium"
+                            />
+                        </div>
+
+                        <div className="flex gap-2 p-1 overflow-x-auto">
+                            <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl text-white/70 hover:text-white whitespace-nowrap transition-all font-medium">
+                                <MapPin className="w-4 h-4 text-white/50" />
+                                {userLocation?.address?.split(',')[0] || 'Location'}
+                            </button>
+                            <button className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-light text-white rounded-2xl shadow-lg shadow-accent/20 whitespace-nowrap transition-all font-bold hover:scale-105 active:scale-95">
+                                <Filter className="w-4 h-4" />
+                                Filters
+                            </button>
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {/* Profile Summary */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-10">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-white/60 text-sm">Profile</p>
-                        <h2 className="text-white text-xl font-semibold">
-                            {profile?.name || 'Client'}
-                        </h2>
-                        {profile?.email && (
-                            <p className="text-white/50 text-sm">{profile.email}</p>
-                        )}
-                    </div>
-                    <div className="text-right">
-                        <p className="text-white/60 text-sm">Account</p>
-                        <p className="text-white text-lg font-semibold">
-                            {profile?.role || 'client'}
-                        </p>
-                        <p className="text-white/40 text-xs uppercase tracking-wide">
-                            {userLocation?.address || 'Location not set'}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Search & Filters */}
-            <section className="mb-10 space-y-6">
-                {/* Search Bar */}
-                <div className="relative max-w-2xl">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input
-                        type="text"
-                        placeholder="Search for artists, genres, or vibes..."
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-white/40 outline-none focus:border-accent/50 focus:bg-white/10 transition-all"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-colors">
-                        <SlidersHorizontal className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Categories */}
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {/* Category Pills */}
+                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide mask-fade-r">
                     {CATEGORIES.map((category) => (
                         <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
-                            className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border ${selectedCategory === category
-                                ? 'bg-accent/20 border-accent text-accent'
-                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                            className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border ${selectedCategory === category
+                                    ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border-white/10'
                                 }`}
                         >
                             {category}
                         </button>
                     ))}
                 </div>
-            </section>
 
-            {/* Featured Section (Optional for 'District' feel) */}
-            <section className="mb-10">
-                <div className="relative w-full h-[300px] rounded-3xl overflow-hidden group cursor-pointer">
-                    <img
-                        src="https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=2574&auto=format&fit=crop"
-                        alt="Featured Event"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/50 to-transparent" />
+                {/* Artists Grid */}
+                <div className="min-h-[400px]">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4">
+                            <Loader2 className="w-10 h-10 text-accent animate-spin" />
+                            <p className="text-white/40 font-medium">Finding nearby talent...</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex justify-between items-end mb-6">
+                                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                    {selectedCategory === 'All' ? 'Trending Artists' : `Top ${selectedCategory}`}
+                                    <span className="text-sm font-normal text-white/40 bg-white/5 px-2 py-0.5 rounded-md ml-2 border border-white/5">{filteredArtists.length}</span>
+                                </h2>
+                            </div>
 
-                    <div className="absolute bottom-0 left-0 p-8 w-full max-w-2xl">
-                        <span className="px-3 py-1 bg-accent rounded-full text-xs font-bold text-white mb-4 inline-block">
-                            Trending Now
-                        </span>
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Summer Music Festival 2026
-                        </h2>
-                        <p className="text-white/80 line-clamp-2 mb-6">
-                            Experience the biggest gathering of indie artists and live bands in Mumbai. Book your artists now for exclusive pre-parties!
-                        </p>
-                        <button className="px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors">
-                            Explore Collection
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            {/* Artists Grid */}
-            <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">
-                        {userLocation ? `Artists near ${userLocation.address.split(',')[0]}` : 'Recommended for You'}
-                    </h2>
-                    {artists.length > 0 && (
-                        <button className="text-accent hover:text-accent-light text-sm font-medium transition-colors">
-                            View All
-                        </button>
+                            {filteredArtists.length === 0 ? (
+                                <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/10 border-dashed backdrop-blur-sm">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <Music className="w-10 h-10 text-white/20" />
+                                    </div>
+                                    <h3 className="text-white text-xl font-bold mb-2">No artists found</h3>
+                                    <p className="text-white/50 max-w-sm mx-auto">Try adjusting your filters or search terms to find what you're looking for.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {filteredArtists.map((artist) => (
+                                        <div key={artist.id} onClick={() => handleCardClick(artist.id)} className="cursor-pointer">
+                                            <ArtistCard
+                                                {...artist}
+                                                onBook={() => handleBook(artist)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
+            </div>
 
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-                        <p className="text-white/60">Finding artists near you...</p>
-                    </div>
-                ) : filteredArtists.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredArtists.map((artist) => (
-                            <ArtistCard
-                                key={artist.id}
-                                {...artist}
-                                onBook={() => handleBook(artist)}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 px-4">
-                        <div className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center mb-6">
-                            <Music className="w-12 h-12 text-accent" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">No Artists Available Yet</h3>
-                        <p className="text-white/60 text-center max-w-md mb-2">
-                            {userLocation
-                                ? `We're still onboarding artists in your area (${userLocation.address.split(',')[0]}). Check back soon!`
-                                : 'Complete your onboarding to see artists near you.'
-                            }
-                        </p>
-                        <p className="text-white/40 text-sm text-center">
-                            Artists will appear here once they register on the platform.
-                        </p>
-                    </div>
-                )}
-            </section>
-
-            {/* Booking Modal */}
             <BookingModal
                 isOpen={bookingModalOpen}
                 onClose={() => setBookingModalOpen(false)}
-                artistId={selectedArtist?.id || ''}
                 artistName={selectedArtist?.name || ''}
+                artistId={selectedArtist?.id || ''}
                 artistImage={selectedArtist?.image || ''}
                 artistPrice={selectedArtist?.price}
             />
@@ -279,7 +204,6 @@ export default function ClientDashboard() {
                 isOpen={incidentModalOpen}
                 onClose={() => setIncidentModalOpen(false)}
             />
-            </div>
         </div>
     );
 }
