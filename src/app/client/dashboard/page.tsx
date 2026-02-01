@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/contexts/auth-context';
+import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import { Search, MapPin, SlidersHorizontal, ChevronDown, AlertTriangle, Music, Loader2 } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
@@ -36,6 +37,11 @@ export default function ClientDashboard() {
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [incidentModalOpen, setIncidentModalOpen] = useState(false);
     const [selectedArtist, setSelectedArtist] = useState<{ id: string; name: string; image: string; price: number } | null>(null);
+
+    useEffect(() => {
+        renderCanvas();
+        return () => stopCanvas();
+    }, []);
 
     // Load user location from localStorage on mount
     useEffect(() => {
@@ -80,7 +86,14 @@ export default function ClientDashboard() {
     });
 
     return (
-        <div className="min-h-screen p-8 relative z-10">
+        <div className="min-h-screen bg-[#0a0a0f] relative">
+            {/* Full-page canvas background */}
+            <canvas
+                className="pointer-events-none fixed inset-0 z-0"
+                id="canvas"
+            />
+
+            <div className="p-8 pt-20 relative z-10">
             {/* Header Section */}
             <header className="flex items-center justify-between mb-8">
                 <div>
@@ -266,6 +279,7 @@ export default function ClientDashboard() {
                 isOpen={incidentModalOpen}
                 onClose={() => setIncidentModalOpen(false)}
             />
+            </div>
         </div>
     );
 }

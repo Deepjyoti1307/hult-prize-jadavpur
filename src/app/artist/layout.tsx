@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function ArtistLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const pathname = usePathname();
     const { profile, loading } = useAuth();
 
     useEffect(() => {
@@ -16,8 +17,13 @@ export default function ArtistLayout({ children }: { children: React.ReactNode }
         }
         if (profile.role && profile.role !== 'artist') {
             router.replace('/client/dashboard');
+            return;
         }
-    }, [loading, profile, router]);
+
+        if (pathname === '/artist/verification-pending') {
+            return;
+        }
+    }, [loading, profile, pathname, router]);
 
     if (loading) {
         return (

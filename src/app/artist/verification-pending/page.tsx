@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import dynamic from 'next/dynamic';
 import Footer from '@/components/Footer';
 import { Clock, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 // Dynamically import Lottie to avoid SSR issues
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
@@ -96,6 +97,13 @@ const waitingAnimationData = {
 
 export default function VerificationPendingPage() {
     const router = useRouter();
+    const { profile } = useAuth();
+
+    useEffect(() => {
+        if (profile) {
+            router.replace('/artist/dashboard');
+        }
+    }, [profile, router]);
 
     const steps = [
         { icon: CheckCircle2, text: 'Mobile Number Verified', completed: true },

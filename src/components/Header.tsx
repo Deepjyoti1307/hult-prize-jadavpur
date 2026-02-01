@@ -60,6 +60,12 @@ export default function Header() {
                     >
                         For Clients
                     </Link>
+                    <Link
+                        href="/admin/login"
+                        className="text-white/60 hover:text-white transition-colors duration-300 font-medium text-sm"
+                    >
+                        Admin
+                    </Link>
                     {user && (
                         <button
                             onClick={() => signOut(auth)}

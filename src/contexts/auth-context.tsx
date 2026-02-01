@@ -56,6 +56,12 @@ export type UserProfile = {
     name?: string;
     email?: string;
     role?: 'artist' | 'client' | string;
+    adminApproval?: {
+        status?: 'pending' | 'approved' | 'rejected' | string;
+        requestedAt?: unknown;
+        reviewedAt?: unknown;
+        reviewedBy?: string;
+    };
     phoneNumber?: string;
     location?: {
         address: string;
@@ -78,6 +84,7 @@ export type UserProfile = {
     }>;
     artistVerification?: Record<string, boolean>;
     clientVerification?: Record<string, boolean>;
+    firstLoginAt?: unknown;
     createdAt?: unknown;
     updatedAt?: unknown;
 };
@@ -158,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         email: authUser.email ?? '',
                         role,
                         createdAt: serverTimestamp(),
+                        firstLoginAt: serverTimestamp(),
                     },
                     { merge: true }
                 );
@@ -166,6 +174,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     userRef,
                     {
                         role,
+                        updatedAt: serverTimestamp(),
+                    },
+                    { merge: true }
+                );
+            } else if (!(userSnap.data() as UserProfile).firstLoginAt) {
+                const existingCreatedAt = (userSnap.data() as UserProfile).createdAt;
+                await setDoc(
+                    userRef,
+                    {
+                        firstLoginAt: existingCreatedAt ?? serverTimestamp(),
                         updatedAt: serverTimestamp(),
                     },
                     { merge: true }
@@ -243,6 +261,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             try {
                 await ensureUserDocuments(authUser);
+                await setDoc(
+                    doc(db, 'users', authUser.uid),
+                    { lastLoginAt: serverTimestamp() },
+                    { merge: true }
+                );
             } catch {
                 setLoading(false);
             }

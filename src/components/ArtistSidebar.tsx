@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -11,7 +12,10 @@ import {
     Shield,
     Settings,
     Siren,
+    Menu,
+    X,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 const navigationItems = [
     { name: 'Home', href: '/artist/dashboard', icon: Home },
@@ -24,9 +28,45 @@ const navigationItems = [
 
 export default function ArtistSidebar() {
     const pathname = usePathname();
+    const { profile } = useAuth();
+    const isApproved = profile?.adminApproval?.status === 'approved';
+    const [open, setOpen] = useState(false);
+
+    const visibleItems = isApproved
+        ? navigationItems
+        : navigationItems.filter((item) => item.href !== '/artist/dashboard');
 
     return (
-        <aside className="w-64 h-screen bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col">
+        <>
+            <button
+                onClick={() => setOpen(true)}
+                className="fixed top-5 left-5 z-50 inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 text-white/90 border border-white/20 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:bg-white/15 hover:scale-105 active:scale-95 transition-all duration-200"
+                aria-label="Open menu"
+            >
+                <Menu className="w-5 h-5" />
+            </button>
+
+            {open && (
+                <button
+                    onClick={() => setOpen(false)}
+                    className="fixed inset-0 z-40 bg-black/50"
+                    aria-label="Close menu overlay"
+                />
+            )}
+
+            <aside
+                className={cn(
+                    'w-64 h-screen bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col fixed top-0 left-0 z-50 transition-transform',
+                    open ? 'translate-x-0' : '-translate-x-full'
+                )}
+            >
+                <button
+                    onClick={() => setOpen(false)}
+                    className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-white border border-white/20"
+                    aria-label="Close menu"
+                >
+                    <X className="w-4 h-4" />
+                </button>
             {/* Logo */}
             <div className="p-6 border-b border-white/10">
                 <Link href="/" className="flex flex-col">
@@ -37,7 +77,7 @@ export default function ArtistSidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-2">
-                {navigationItems.map((item) => {
+                {visibleItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
 
@@ -45,6 +85,7 @@ export default function ArtistSidebar() {
                         <Link
                             key={item.name}
                             href={item.href}
+                            onClick={() => setOpen(false)}
                             className={cn(
                                 'flex items-center gap-3 px-4 py-3 rounded-xl transition-all group',
                                 isActive
@@ -66,7 +107,7 @@ export default function ArtistSidebar() {
 
             {/* Emergency Button - Movie Style */}
             <div className="p-4 border-t border-white/10">
-                <Link href="/artist/emergency">
+                <Link href="/artist/emergency" onClick={() => setOpen(false)}>
                     <div className="relative group cursor-pointer">
                         {/* Pulsing background glow */}
                         <div className="absolute inset-0 bg-red-500/20 rounded-2xl blur-lg group-hover:bg-red-500/30 transition-all animate-pulse" />
@@ -88,5 +129,6 @@ export default function ArtistSidebar() {
                 </Link>
             </div>
         </aside>
+        </>
     );
 }

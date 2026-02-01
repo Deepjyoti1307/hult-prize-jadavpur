@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import ArtistSidebar from '@/components/ArtistSidebar';
+import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import {
     Music,
     Users,
@@ -10,6 +11,7 @@ import {
     Calendar,
     MapPin,
     ChevronRight,
+    ShieldCheck,
 } from 'lucide-react';
 
 interface StatCardProps {
@@ -48,6 +50,12 @@ function StatCard({ icon, label, value, iconBg }: StatCardProps) {
 
 export default function ArtistDashboard() {
     const { profile, artistBookings, updateBookingStatus } = useAuth();
+
+    useEffect(() => {
+        renderCanvas();
+        return () => stopCanvas();
+    }, []);
+
     const verifiedSteps = useMemo(() => {
         const verification = profile?.artistVerification ?? {};
         return [
@@ -133,13 +141,19 @@ export default function ArtistDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex">
+        <div className="min-h-screen bg-[#0a0a0f] flex relative">
+            {/* Full-page canvas background */}
+            <canvas
+                className="pointer-events-none fixed inset-0 z-0"
+                id="canvas"
+            />
+
             {/* Sidebar */}
             <ArtistSidebar />
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto">
-                <div className="p-8">
+            <main className="flex-1 overflow-y-auto relative z-10">
+                <div className="p-8 pt-20">
                     {/* Main Content Area */}
                     <div className="space-y-6">
                         {/* Welcome Section */}
@@ -155,9 +169,17 @@ export default function ArtistDashboard() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-white/60 text-sm">Profile</p>
-                                    <h2 className="text-white text-xl font-semibold">
-                                        {profile?.name || 'Artist'}
-                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-white text-xl font-semibold">
+                                            {profile?.name || 'Artist'}
+                                        </h2>
+                                        {profile?.adminApproval?.status === 'approved' && (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent/15 text-accent border border-accent/30">
+                                                <ShieldCheck className="w-3.5 h-3.5" />
+                                                Verified
+                                            </span>
+                                        )}
+                                    </div>
                                     {profile?.email && (
                                         <p className="text-white/50 text-sm">{profile.email}</p>
                                     )}

@@ -26,11 +26,11 @@ let pos = { x: 0, y: 0 };
 let lines: any[] = [];
 const E = {
     debug: true,
-    friction: 0.5,
-    trails: 80,
-    size: 50,
-    dampening: 0.025,
-    tension: 0.99,
+    friction: 0.45,
+    trails: 60,
+    size: 80,
+    dampening: 0.015,
+    tension: 0.995,
 };
 
 function Node() {
@@ -141,8 +141,8 @@ function render() {
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = "hsla(" + Math.round(f.update()) + ",100%,50%,0.025)";
-    ctx.lineWidth = 10;
+    ctx.strokeStyle = "hsla(" + Math.round(f.update()) + ",90%,50%,0.015)";
+    ctx.lineWidth = 12;
 
     for (let t = 0; t < E.trails; t++) {
         const line = lines[t];
@@ -151,7 +151,7 @@ function render() {
     }
 
     (ctx as any).frame++;
-    window.requestAnimationFrame(render);
+    requestAnimationFrame(render);
 }
 
 function resizeCanvas() {
@@ -173,7 +173,7 @@ export const renderCanvas = function () {
     f = new n({
         phase: Math.random() * 2 * Math.PI,
         amplitude: 85,
-        frequency: 0.0015,
+        frequency: 0.0008,
         offset: 285,
     });
 
