@@ -11,7 +11,7 @@
 
 *A safety-first platform connecting verified artists with event organizers across India*
 
-[Live Demo](#) · [Report Bug](https://github.com/your-repo/issues) · [Request Feature](https://github.com/your-repo/issues)
+[🌐 Live Demo](https://tarang-2026.vercel.app) · [Report Bug](https://github.com/Deepjyoti1307/hult-prize-jadavpur/issues) · [Request Feature](https://github.com/Deepjyoti1307/hult-prize-jadavpur/issues)
 
 </div>
 
@@ -67,8 +67,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/tarang.git
-   cd tarang
+   git clone https://github.com/Deepjyoti1307/hult-prize-jadavpur.git
+   cd hult-prize-jadavpur
    ```
 
 2. **Install dependencies**
@@ -94,6 +94,8 @@
    ```
 
 5. **Open [http://localhost:3000](http://localhost:3000)** in your browser
+
+> 💡 **Or visit the live deployment at [tarang-2026.vercel.app](https://tarang-2026.vercel.app)**
 
 ---
 
@@ -123,17 +125,6 @@ src/
 
 ---
 
-## 🎨 Screenshots
-
-<div align="center">
-
-| Landing Page | Artist Dashboard |
-|:------------:|:----------------:|
-| ![Landing](https://via.placeholder.com/400x250?text=Landing+Page) | ![Dashboard](https://via.placeholder.com/400x250?text=Artist+Dashboard) |
-
-| Client Search | Booking Flow |
-|:-------------:|:------------:|
-| ![Search](https://via.placeholder.com/400x250?text=Search+Artists) | ![Booking](https://via.placeholder.com/400x250?text=Booking+Modal) |
 
 </div>
 
@@ -174,7 +165,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-Built with ❤️ for **Hult Prize 2026** by Team Jadavpur
+Built with ❤️ for **Hult Prize Jadavpur 2026** by Team Tarang
 
 ---
 
