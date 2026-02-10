@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
@@ -29,9 +30,19 @@ export default function Header() {
         >
             <div className="container-custom flex items-center justify-between px-4 md:px-6">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-white italic">TARANG</span>
-                    <span className="text-xs text-white/60 hidden sm:block">Where music finds its stage</span>
+                <Link href="/" className="flex items-center">
+                    <Image
+                        src="/logo.png"
+                        alt="Tarang - Where music finds its stage"
+                        width={160}
+                        height={60}
+                        className="h-12 w-auto object-contain invert"
+                        style={{
+                            maskImage: "radial-gradient(ellipse 85% 80% at center, black 50%, transparent 100%)",
+                            WebkitMaskImage: "radial-gradient(ellipse 85% 80% at center, black 50%, transparent 100%)",
+                        }}
+                        priority
+                    />
                 </Link>
 
                 {/* Navigation */}

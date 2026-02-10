@@ -13,6 +13,7 @@ import {
     Heart,
     X,
     ChevronRight,
+    type LucideIcon,
 } from 'lucide-react';
 
 // Emergency contacts - In production, these would come from user settings
@@ -41,7 +42,7 @@ function EmergencyButton({
     color,
     onClick,
 }: {
-    icon: React.ElementType;
+    icon: LucideIcon;
     label: string;
     sublabel?: string;
     phone: string;

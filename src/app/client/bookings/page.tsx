@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, MapPin, MoreVertical, MessageCircle, ChevronRight, Search, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, MoreVertical, MessageCircle, ChevronRight, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
@@ -62,8 +62,8 @@ export default function BookingsPage() {
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
                             className={`flex-1 md:flex-none px-8 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab
-                                    ? 'bg-accent text-white shadow-lg shadow-accent/20'
-                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                ? 'bg-accent text-white shadow-lg shadow-accent/20'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {tab}
@@ -113,8 +113,8 @@ export default function BookingsPage() {
                                                 {booking.artistName || 'Unknown Artist'}
                                             </h3>
                                             <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${booking.status === 'Confirmed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                                    booking.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                                        'bg-white/10 text-white/40 border-white/10'
+                                                booking.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                                    'bg-white/10 text-white/40 border-white/10'
                                                 }`}>
                                                 {booking.status || 'Pending'}
                                             </span>

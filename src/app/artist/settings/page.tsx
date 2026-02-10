@@ -1,23 +1,98 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import ArtistSidebar from '@/components/ArtistSidebar';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { User, Mail, Phone, MapPin, Camera, Save, Bell, Shield, LogOut } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, Save, Bell, Shield, LogOut, Check } from 'lucide-react';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { uploadProfilePhoto } from '@/lib/appwrite';
 import { useRouter } from 'next/navigation';
+import PulsatingDots from '@/components/ui/pulsating-loader';
 
 export default function ArtistSettings() {
     const { profile } = useAuth();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    // Controlled form state
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [location, setLocation] = useState('');
+    const [bio, setBio] = useState('');
+    const [category, setCategory] = useState('Live Band');
+    const [photoURL, setPhotoURL] = useState('');
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Sync form state with profile when it loads
+    useEffect(() => {
+        if (profile) {
+            setName(profile.name || '');
+            setPhone(profile.phoneNumber || '');
+            setLocation(profile.location?.address || '');
+            setBio(profile.bio || '');
+            setCategory(profile.category || 'Live Band');
+            setPhotoURL(profile.photoURL || '');
+        }
+    }, [profile]);
 
     useEffect(() => {
         renderCanvas();
         return () => stopCanvas();
     }, []);
+
+    const handleSave = async () => {
+        if (!profile?.uid) return;
+        setIsLoading(true);
+        try {
+            const userRef = doc(db, 'users', profile.uid);
+            await updateDoc(userRef, {
+                name,
+                phoneNumber: phone,
+                'location.address': location,
+                bio,
+                category,
+                photoURL,
+                updatedAt: new Date(),
+            });
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+        } catch (error) {
+            console.error('Error saving profile:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handlePhotoClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !profile?.uid) return;
+
+        setIsUploadingPhoto(true);
+        try {
+            const url = await uploadProfilePhoto(file, profile.uid);
+
+            await updateDoc(doc(db, 'users', profile.uid), {
+                photoURL: url,
+                updatedAt: new Date(),
+            });
+
+            setPhotoURL(url);
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+        } finally {
+            setIsUploadingPhoto(false);
+            event.target.value = '';
+        }
+    };
 
     const handleLogout = async () => {
         await signOut(auth);
@@ -36,9 +111,24 @@ export default function ArtistSettings() {
                             <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
                             <p className="text-white/60">Manage your profile and account preferences</p>
                         </div>
-                        <button className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-white rounded-xl font-medium transition-all shadow-lg shadow-accent/20">
-                            <Save className="w-4 h-4" />
-                            Save Changes
+                        <button
+                            onClick={handleSave}
+                            disabled={isLoading || saveSuccess}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg ${saveSuccess
+                                ? 'bg-green-500 text-white shadow-green-500/20'
+                                : 'bg-accent hover:bg-accent-light text-white shadow-accent/20 disabled:opacity-50'
+                                }`}
+                        >
+                            {isLoading ? (
+                                <div className="scale-75">
+                                    <PulsatingDots />
+                                </div>
+                            ) : saveSuccess ? (
+                                <Check className="w-4 h-4" />
+                            ) : (
+                                <Save className="w-4 h-4" />
+                            )}
+                            {saveSuccess ? 'Saved!' : 'Save Changes'}
                         </button>
                     </div>
 
@@ -49,12 +139,28 @@ export default function ArtistSettings() {
 
                             <div className="flex flex-col md:flex-row gap-8 items-start">
                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="w-32 h-32 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center relative group cursor-pointer overflow-hidden">
-                                        <Camera className="w-8 h-8 text-white/40 group-hover:text-white transition-colors" />
+                                    <div
+                                        onClick={handlePhotoClick}
+                                        className="w-32 h-32 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center relative group cursor-pointer overflow-hidden"
+                                    >
+                                        {photoURL ? (
+                                            <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Camera className="w-8 h-8 text-white/40 group-hover:text-white transition-colors" />
+                                        )}
                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="text-white text-xs font-medium">Change Photo</span>
+                                            <span className="text-white text-xs font-medium">
+                                                {isUploadingPhoto ? 'Uploading...' : 'Change Photo'}
+                                            </span>
                                         </div>
                                     </div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handlePhotoChange}
+                                    />
                                 </div>
 
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -64,7 +170,8 @@ export default function ArtistSettings() {
                                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                             <input
                                                 type="text"
-                                                defaultValue={profile?.name || ''}
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
                                                 className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                             />
                                         </div>
@@ -72,7 +179,11 @@ export default function ArtistSettings() {
 
                                     <div className="space-y-2">
                                         <label className="text-white/60 text-sm font-medium">Category</label>
-                                        <select className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors appearance-none">
+                                        <select
+                                            value={category}
+                                            onChange={(e) => setCategory(e.target.value)}
+                                            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors appearance-none"
+                                        >
                                             <option>Live Band</option>
                                             <option>DJ</option>
                                             <option>Solo Musician</option>
@@ -84,6 +195,8 @@ export default function ArtistSettings() {
                                         <label className="text-white/60 text-sm font-medium">Bio</label>
                                         <textarea
                                             rows={4}
+                                            value={bio}
+                                            onChange={(e) => setBio(e.target.value)}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white focus:border-accent/50 focus:outline-none transition-colors resize-none"
                                             placeholder="Tell clients about your style, experience, and what makes you unique..."
                                         />
@@ -114,7 +227,8 @@ export default function ArtistSettings() {
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                         <input
                                             type="tel"
-                                            defaultValue={profile?.phoneNumber || ''}
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                         />
                                     </div>
@@ -125,7 +239,8 @@ export default function ArtistSettings() {
                                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                         <input
                                             type="text"
-                                            defaultValue={profile?.location?.address || ''}
+                                            value={location}
+                                            onChange={(e) => setLocation(e.target.value)}
                                             className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-accent/50 focus:outline-none transition-colors"
                                             placeholder="e.g. Mumbai, Maharashtra"
                                         />

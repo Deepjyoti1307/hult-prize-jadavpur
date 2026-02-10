@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import Logo from '@/components/Logo';
 import {
     LayoutGrid,
     Search,
@@ -89,10 +90,9 @@ export default function ClientSidebar() {
                     <X className="w-4 h-4" />
                 </button>
                 {/* Logo area */}
-                <Link href="/" className="flex flex-col px-2 mb-10">
-                    <span className="text-2xl font-bold text-white italic">TARANG</span>
-                    <span className="text-xs text-white/50">Where music finds its stage</span>
-                </Link>
+                <div className="px-2 mb-10">
+                    <Logo size="md" linkTo="/" />
+                </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 space-y-2">

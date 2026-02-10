@@ -243,3 +243,287 @@ body {
 .arrow-svg {
   display: block;
 }
+
+/* ═══════════════════════════════════════════════
+   Futuristic 3D Hero Styles
+   ═══════════════════════════════════════════════ */
+
+/* Glowing text effect for TARANG title */
+.hero-text-glow {
+  background: linear-gradient(135deg,
+      #ffffff 0%,
+      #2D8B7A 40%,
+      #3AA08C 60%,
+      #ffffff 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroTextShimmer 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(45, 139, 122, 0.4)) drop-shadow(0 0 60px rgba(45, 139, 122, 0.15));
+}
+
+/* Per-letter glow for sliding TARANG */
+.hero-letter-glow {
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(45, 139, 122, 0.8),
+    0 0 30px rgba(45, 139, 122, 0.5),
+    0 0 60px rgba(45, 139, 122, 0.3),
+    0 0 100px rgba(45, 139, 122, 0.15);
+  animation: heroLetterPulse 4s ease-in-out infinite;
+}
+
+.hero-letter-glow:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.hero-letter-glow:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.hero-letter-glow:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.hero-letter-glow:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.hero-letter-glow:nth-child(5) {
+  animation-delay: 1.2s;
+}
+
+.hero-letter-glow:nth-child(6) {
+  animation-delay: 1.5s;
+}
+
+@keyframes heroLetterPulse {
+
+  0%,
+  100% {
+    text-shadow:
+      0 0 10px rgba(45, 139, 122, 0.8),
+      0 0 30px rgba(45, 139, 122, 0.5),
+      0 0 60px rgba(45, 139, 122, 0.3);
+  }
+
+  50% {
+    text-shadow:
+      0 0 15px rgba(45, 139, 122, 1),
+      0 0 45px rgba(45, 139, 122, 0.7),
+      0 0 90px rgba(45, 139, 122, 0.4),
+      0 0 140px rgba(45, 139, 122, 0.2);
+  }
+}
+
+/* Per-letter glow for sliding tagline */
+.hero-subtitle-letter {
+  color: #3AA08C;
+  text-shadow:
+    0 0 8px rgba(45, 139, 122, 0.5),
+    0 0 20px rgba(45, 139, 122, 0.25);
+}
+
+@keyframes heroTextShimmer {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Subtitle glow */
+.hero-subtitle-glow {
+  text-shadow: 0 0 20px rgba(45, 139, 122, 0.35),
+    0 0 40px rgba(45, 139, 122, 0.1);
+}
+
+/* Title shimmer border effect */
+.hero-title {
+  position: relative;
+}
+
+/* Badge glow */
+.hero-glow-badge {
+  box-shadow: 0 0 15px rgba(45, 139, 122, 0.08),
+    inset 0 0 15px rgba(45, 139, 122, 0.03);
+  animation: badgePulse 4s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(45, 139, 122, 0.08),
+      inset 0 0 15px rgba(45, 139, 122, 0.03);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(45, 139, 122, 0.15),
+      inset 0 0 20px rgba(45, 139, 122, 0.06);
+  }
+}
+
+/* CTA button glow */
+.hero-btn-glow {
+  box-shadow: 0 0 20px rgba(45, 139, 122, 0.25),
+    0 0 40px rgba(45, 139, 122, 0.08);
+  transition: box-shadow 0.4s ease, transform 0.3s ease;
+}
+
+.hero-btn-glow:hover {
+  box-shadow: 0 0 30px rgba(45, 139, 122, 0.4),
+    0 0 60px rgba(45, 139, 122, 0.15),
+    0 0 90px rgba(45, 139, 122, 0.05);
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════
+   Neon Buttons
+   ═══════════════════════════════════════════════ */
+.neon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 48px;
+  font-size: 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 0.02em;
+}
+
+/* Primary neon — filled glow */
+.neon-btn-primary {
+  background: linear-gradient(135deg, #2D8B7A 0%, #3AA08C 50%, #2D8B7A 100%);
+  background-size: 200% 200%;
+  animation: neonBtnShift 4s ease-in-out infinite;
+  color: #fff;
+  border: 1px solid rgba(58, 160, 140, 0.6);
+  box-shadow:
+    0 0 12px rgba(45, 139, 122, 0.4),
+    0 0 30px rgba(45, 139, 122, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 12px rgba(45, 139, 122, 0.6);
+}
+
+.neon-btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+  background-size: 200% 200%;
+  animation: neonBtnShift 4s ease-in-out infinite reverse;
+  border-radius: inherit;
+}
+
+.neon-btn-primary:hover {
+  box-shadow:
+    0 0 20px rgba(45, 139, 122, 0.6),
+    0 0 50px rgba(45, 139, 122, 0.3),
+    0 0 80px rgba(45, 139, 122, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(58, 160, 140, 0.9);
+  text-shadow: 0 0 20px rgba(45, 139, 122, 0.9);
+}
+
+.neon-btn-primary:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Outline neon — border glow */
+.neon-btn-outline {
+  background: rgba(45, 139, 122, 0.04);
+  color: #fff;
+  border: 1px solid rgba(45, 139, 122, 0.35);
+  box-shadow:
+    0 0 8px rgba(45, 139, 122, 0.12),
+    inset 0 0 8px rgba(45, 139, 122, 0.04);
+  text-shadow: 0 0 8px rgba(45, 139, 122, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.neon-btn-outline::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(45, 139, 122, 0.3), rgba(30, 58, 95, 0.3), rgba(45, 139, 122, 0.3));
+  background-size: 300% 300%;
+  animation: neonBorderRotate 6s linear infinite;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.neon-btn-outline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 15, 0.85);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.neon-btn-outline:hover {
+  border-color: rgba(45, 139, 122, 0.7);
+  background: rgba(45, 139, 122, 0.08);
+  box-shadow:
+    0 0 18px rgba(45, 139, 122, 0.3),
+    0 0 40px rgba(45, 139, 122, 0.1),
+    inset 0 0 14px rgba(45, 139, 122, 0.06);
+  transform: translateY(-3px) scale(1.02);
+  text-shadow: 0 0 16px rgba(45, 139, 122, 0.5);
+}
+
+.neon-btn-outline:hover::before {
+  opacity: 1;
+}
+
+.neon-btn-outline:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+@keyframes neonBtnShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes neonBorderRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* CRT / scan-line overlay */
+.hero-scanlines {
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.015) 2px,
+      rgba(255, 255, 255, 0.015) 4px);
+  pointer-events: none;
+}

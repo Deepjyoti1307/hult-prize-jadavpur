@@ -16,9 +16,11 @@ import {
     doc,
     getDoc,
     onSnapshot,
+    orderBy,
     query,
     serverTimestamp,
     setDoc,
+    updateDoc,
     where,
 } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -51,11 +53,47 @@ export type Booking = {
     createdAt?: unknown;
 };
 
+export type Message = {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    text: string;
+    createdAt?: unknown;
+    read?: boolean;
+};
+
+export type Conversation = {
+    id: string;
+    participants: string[];
+    participantNames: Record<string, string>;
+    participantImages: Record<string, string>;
+    lastMessage?: string;
+    lastMessageAt?: unknown;
+    lastSenderId?: string;
+    unreadCount?: Record<string, number>;
+    createdAt?: unknown;
+};
+
+export type Transaction = {
+    id: string;
+    artistId: string;
+    clientId: string;
+    clientName: string;
+    bookingId?: string;
+    amount: number;
+    type: 'Gig Payment' | 'Advance' | 'Withdrawal' | 'Refund' | string;
+    status: 'Completed' | 'Processing' | 'Pending' | 'Failed' | string;
+    createdAt?: unknown;
+};
+
 export type UserProfile = {
     uid: string;
     name?: string;
     email?: string;
     role?: 'artist' | 'client' | string;
+    category?: string;
+    bio?: string;
+    photoURL?: string;
     adminApproval?: {
         status?: 'pending' | 'approved' | 'rejected' | string;
         requestedAt?: unknown;
@@ -82,7 +120,17 @@ export type UserProfile = {
         fee: number;
         initials?: string;
     }>;
-    artistVerification?: Record<string, boolean>;
+    artistVerification?: {
+        idProof?: boolean;
+        introVideo?: boolean;
+        performanceClip?: boolean;
+        firstGig?: boolean;
+        idProofUrl?: string;
+        introVideoUrl?: string;
+        performanceClipUrl?: string;
+        introVideoLink?: string;
+        performanceClipLink?: string;
+    };
     clientVerification?: Record<string, boolean>;
     firstLoginAt?: unknown;
     createdAt?: unknown;
@@ -98,12 +146,20 @@ type AuthContextValue = {
     favorites: ArtistProfile[];
     bookings: Booking[];
     artistBookings: Booking[];
+    conversations: Conversation[];
+    messages: Message[];
+    activeConversationId: string | null;
+    transactions: Transaction[];
     toggleFavorite: (artist: ArtistProfile) => Promise<void>;
     createBooking: (input: Omit<Booking, 'id' | 'clientId' | 'status'> & { status?: Booking['status'] }) => Promise<void>;
     updateBookingStatus: (bookingId: string, status: Booking['status']) => Promise<void>;
     deleteBooking: (bookingId: string) => Promise<void>;
     refreshProfile: () => Promise<void>;
     setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+    startConversation: (otherUserId: string, otherUserName: string, otherUserImage: string) => Promise<string>;
+    sendMessage: (conversationId: string, text: string) => Promise<void>;
+    setActiveConversationId: (id: string | null) => void;
+    markConversationRead: (conversationId: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -117,6 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [favorites, setFavorites] = useState<ArtistProfile[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [artistBookings, setArtistBookings] = useState<Booking[]>([]);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
         const artistsRef = collection(db, 'artists');
@@ -238,6 +298,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let unsubscribeFavorites: (() => void) | null = null;
         let unsubscribeBookings: (() => void) | null = null;
         let unsubscribeArtistBookings: (() => void) | null = null;
+        let unsubscribeConversations: (() => void) | null = null;
+        let unsubscribeMessages: (() => void) | null = null;
+        let unsubscribeTransactions: (() => void) | null = null;
         const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
             setUser(authUser);
             setLoading(true);
@@ -251,10 +314,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 unsubscribeBookings = null;
                 unsubscribeArtistBookings?.();
                 unsubscribeArtistBookings = null;
+                unsubscribeConversations?.();
+                unsubscribeConversations = null;
+                unsubscribeMessages?.();
+                unsubscribeMessages = null;
+                unsubscribeTransactions?.();
+                unsubscribeTransactions = null;
                 setProfile(null);
                 setFavorites([]);
                 setBookings([]);
                 setArtistBookings([]);
+                setConversations([]);
+                setMessages([]);
+                setTransactions([]);
+                setActiveConversationId(null);
                 setLoading(false);
                 return;
             }
@@ -286,6 +359,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 '',
                             email: data.email ?? authUser.email ?? '',
                             role: data.role,
+                            category: data.category,
+                            bio: data.bio,
+                            photoURL: data.photoURL,
                             phoneNumber: data.phoneNumber ?? authUser.phoneNumber ?? undefined,
                             location: data.location,
                             artistVerification: data.artistVerification,
@@ -357,6 +433,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 },
                 () => setArtistBookings([])
             );
+
+            // Conversations listener
+            const conversationsRef = query(
+                collection(db, 'conversations'),
+                where('participants', 'array-contains', authUser.uid),
+                orderBy('lastMessageAt', 'desc')
+            );
+            unsubscribeConversations?.();
+            unsubscribeConversations = onSnapshot(
+                conversationsRef,
+                (snapshot) => {
+                    const items = snapshot.docs.map((docSnap) => ({
+                        id: docSnap.id,
+                        ...(docSnap.data() as Omit<Conversation, 'id'>),
+                    }));
+                    setConversations(items);
+                },
+                () => setConversations([])
+            );
+
+            // Transactions listener (for artists)
+            const transactionsRef = query(
+                collection(db, 'transactions'),
+                where('artistId', '==', authUser.uid),
+                orderBy('createdAt', 'desc')
+            );
+            unsubscribeTransactions?.();
+            unsubscribeTransactions = onSnapshot(
+                transactionsRef,
+                (snapshot) => {
+                    const items = snapshot.docs.map((docSnap) => ({
+                        id: docSnap.id,
+                        ...(docSnap.data() as Omit<Transaction, 'id'>),
+                    }));
+                    setTransactions(items);
+                },
+                () => setTransactions([])
+            );
         });
 
         return () => {
@@ -365,6 +479,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             unsubscribeFavorites?.();
             unsubscribeBookings?.();
             unsubscribeArtistBookings?.();
+            unsubscribeConversations?.();
+            unsubscribeMessages?.();
+            unsubscribeTransactions?.();
         };
     }, []);
 
@@ -447,6 +564,116 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Listen for messages when activeConversationId changes
+    useEffect(() => {
+        if (!activeConversationId || !user) {
+            setMessages([]);
+            return;
+        }
+
+        const messagesRef = query(
+            collection(db, 'conversations', activeConversationId, 'messages'),
+            orderBy('createdAt', 'asc')
+        );
+
+        const unsubscribe = onSnapshot(
+            messagesRef,
+            (snapshot) => {
+                const items = snapshot.docs.map((docSnap) => ({
+                    id: docSnap.id,
+                    ...(docSnap.data() as Omit<Message, 'id'>),
+                }));
+                setMessages(items);
+            },
+            () => setMessages([])
+        );
+
+        return () => unsubscribe();
+    }, [activeConversationId, user]);
+
+    // Start or get existing conversation
+    const startConversation = async (
+        otherUserId: string,
+        otherUserName: string,
+        otherUserImage: string
+    ): Promise<string> => {
+        if (!user || !profile) throw new Error('Not authenticated');
+
+        // Check if conversation already exists
+        const existingConvo = conversations.find(
+            (c) => c.participants.includes(otherUserId) && c.participants.includes(user.uid)
+        );
+        if (existingConvo) return existingConvo.id;
+
+        // Create new conversation
+        const convoRef = await addDoc(collection(db, 'conversations'), {
+            participants: [user.uid, otherUserId],
+            participantNames: {
+                [user.uid]: profile.name || 'User',
+                [otherUserId]: otherUserName,
+            },
+            participantImages: {
+                [user.uid]: `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name || 'User'}`,
+                [otherUserId]: otherUserImage,
+            },
+            lastMessage: '',
+            lastMessageAt: serverTimestamp(),
+            lastSenderId: user.uid,
+            unreadCount: {
+                [user.uid]: 0,
+                [otherUserId]: 0,
+            },
+            createdAt: serverTimestamp(),
+        });
+
+        return convoRef.id;
+    };
+
+    // Send a message
+    const sendMessage = async (conversationId: string, text: string): Promise<void> => {
+        if (!user) return;
+
+        // Add message to subcollection
+        await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
+            conversationId,
+            senderId: user.uid,
+            text,
+            createdAt: serverTimestamp(),
+            read: false,
+        });
+
+        // Get the other participant to update unread count
+        const convo = conversations.find((c) => c.id === conversationId);
+        const otherUserId = convo?.participants.find((p) => p !== user.uid);
+
+        // Update conversation with last message
+        await setDoc(
+            doc(db, 'conversations', conversationId),
+            {
+                lastMessage: text,
+                lastMessageAt: serverTimestamp(),
+                lastSenderId: user.uid,
+                ...(otherUserId && {
+                    [`unreadCount.${otherUserId}`]: (convo?.unreadCount?.[otherUserId] || 0) + 1,
+                }),
+            },
+            { merge: true }
+        );
+    };
+
+    // Mark conversation as read
+    const markConversationRead = async (conversationId: string): Promise<void> => {
+        if (!user) return;
+
+        await setDoc(
+            doc(db, 'conversations', conversationId),
+            {
+                [`unreadCount.${user.uid}`]: 0,
+            },
+            { merge: true }
+        );
+    };
+
     const value = useMemo(
         () => ({
             user,
@@ -457,12 +684,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             favorites,
             bookings,
             artistBookings,
+            conversations,
+            messages,
+            activeConversationId,
+            transactions,
             toggleFavorite,
             createBooking,
             updateBookingStatus,
             deleteBooking,
             refreshProfile,
             setProfile,
+            startConversation,
+            sendMessage,
+            setActiveConversationId,
+            markConversationRead,
         }),
         [
             user,
@@ -473,6 +708,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             favorites,
             bookings,
             artistBookings,
+            conversations,
+            messages,
+            activeConversationId,
+            transactions,
         ]
     );
 

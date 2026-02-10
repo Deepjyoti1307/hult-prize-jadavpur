@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { Search, MapPin, SlidersHorizontal, AlertTriangle, Sparkles, Filter, Music, Loader2 } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, AlertTriangle, Sparkles, Filter, Music } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
 import IncidentModal from '@/components/IncidentModal';
 import { useRouter } from 'next/navigation';
+import PulsatingDots from '@/components/ui/pulsating-loader';
 
 interface Artist {
     id: string;
@@ -141,8 +142,8 @@ export default function ClientDashboard() {
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border ${selectedCategory === category
-                                    ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border-white/10'
+                                ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border-white/10'
                                 }`}
                         >
                             {category}
@@ -154,7 +155,7 @@ export default function ClientDashboard() {
                 <div className="min-h-[400px]">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center h-64 gap-4">
-                            <Loader2 className="w-10 h-10 text-accent animate-spin" />
+                            <PulsatingDots />
                             <p className="text-white/40 font-medium">Finding nearby talent...</p>
                         </div>
                     ) : (

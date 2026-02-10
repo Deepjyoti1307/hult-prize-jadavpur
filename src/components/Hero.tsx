@@ -1,185 +1,234 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { Shield, Music, Search, CheckCircle, Lock, MapPin, ArrowRight } from "lucide-react";
+import {
+    Shield,
+    Music,
+    Search,
+    CheckCircle,
+    Lock,
+    MapPin,
+    ChevronDown,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import PulsatingDots from "@/components/ui/pulsating-loader";
+
+/* Dynamic-load the Three.js scene — SSR disabled */
+const Hero3DScene = dynamic(() => import("@/components/Hero3DScene"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-full flex items-center justify-center bg-[#0a0a0f]">
+            <PulsatingDots />
+        </div>
+    ),
+});
+
+/* Letter-by-letter slide-in component */
+function SlidingText({
+    text,
+    className,
+    letterClassName,
+    delay = 0,
+    stagger = 0.06,
+    direction = "up",
+}: {
+    text: string;
+    className?: string;
+    letterClassName?: string;
+    delay?: number;
+    stagger?: number;
+    direction?: "up" | "down" | "left" | "right";
+}) {
+    const dirMap = {
+        up: { y: 60, x: 0 },
+        down: { y: -60, x: 0 },
+        left: { x: 80, y: 0 },
+        right: { x: -80, y: 0 },
+    };
+    const { x, y } = dirMap[direction];
+
+    return (
+        <span className={className} style={{ display: "inline-flex", flexWrap: "wrap", justifyContent: "center" }}>
+            {text.split("").map((char, i) => (
+                <motion.span
+                    key={i}
+                    initial={{ opacity: 0, x, y, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, x: 0, y: 0, filter: "blur(0px)" }}
+                    transition={{
+                        delay: delay + i * stagger,
+                        duration: 0.7,
+                        ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className={letterClassName}
+                    style={{ display: "inline-block", whiteSpace: char === " " ? "pre" : "normal" }}
+                >
+                    {char === " " ? "\u00A0" : char}
+                </motion.span>
+            ))}
+        </span>
+    );
+}
 
 export default function Hero() {
+    const [sceneReady, setSceneReady] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setSceneReady(true), 400);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
-        <section className="relative min-h-screen flex items-center overflow-hidden bg-transparent">
-            {/* Gradient overlays */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f]/50 via-transparent to-[#0a0a0f]/80 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/30 via-transparent to-[#0a0a0f]/30 pointer-events-none" />
+        <section className="relative min-h-screen flex items-center overflow-hidden">
+            {/* ── Three.js 3D Canvas Background ── */}
+            <div className="absolute inset-0 z-0">
+                <Hero3DScene />
+            </div>
 
-            {/* Guitar Visual Element - Right Side */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[800px] pointer-events-none">
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-l from-accent/30 via-accent/10 to-transparent blur-3xl" />
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[400px] h-[600px]">
-                    {/* Guitar SVG */}
-                    <svg
-                        viewBox="0 0 200 500"
-                        className="w-full h-full opacity-40"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+            {/* ── Gradient overlays for text readability ── */}
+            <div className="absolute inset-0 z-[1] pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f]/70 via-[#0a0a0f]/30 to-[#0a0a0f]/80" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/40 via-transparent to-[#0a0a0f]/40" />
+                {/* Vignette */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#0a0a0f_100%)]" />
+            </div>
+
+            {/* ── Scan-line overlay ── */}
+            <div className="absolute inset-0 z-[2] pointer-events-none hero-scanlines opacity-[0.03]" />
+
+            {/* ── Content Overlay ── */}
+            <AnimatePresence>
+                {sceneReady && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="relative z-10 w-full"
                     >
-                        {/* Guitar Headstock */}
-                        <path
-                            d="M85 10 L115 10 L115 60 L85 60 Z"
-                            fill="url(#guitarGradient)"
-                            className="drop-shadow-[0_0_15px_rgba(45,139,122,0.5)]"
-                        />
-                        {/* Tuning Pegs */}
-                        <circle cx="75" cy="20" r="8" fill="url(#guitarGradient)" />
-                        <circle cx="75" cy="40" r="8" fill="url(#guitarGradient)" />
-                        <circle cx="75" cy="60" r="8" fill="url(#guitarGradient)" />
-                        <circle cx="125" cy="20" r="8" fill="url(#guitarGradient)" />
-                        <circle cx="125" cy="40" r="8" fill="url(#guitarGradient)" />
-                        <circle cx="125" cy="60" r="8" fill="url(#guitarGradient)" />
+                        <div className="container-custom px-4 md:px-6 pt-24 pb-16">
+                            <div className="max-w-5xl mx-auto text-center">
+                                {/* Animated safety badge */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                                    className="inline-flex items-center gap-2 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-accent px-5 py-2.5 rounded-full mb-10 hero-glow-badge"
+                                >
+                                    <Shield className="w-4 h-4 text-accent" />
+                                    <span className="text-sm font-medium text-white/90 tracking-wide">
+                                        Safety-First Platform
+                                    </span>
+                                    <span className="relative flex h-2 w-2 ml-1">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+                                    </span>
+                                </motion.div>
 
-                        {/* Guitar Neck */}
-                        <rect
-                            x="90"
-                            y="60"
-                            width="20"
-                            height="150"
-                            fill="url(#guitarGradient)"
-                            className="drop-shadow-[0_0_20px_rgba(45,139,122,0.6)]"
-                        />
-                        {/* Frets */}
-                        <line x1="90" y1="80" x2="110" y2="80" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
-                        <line x1="90" y1="100" x2="110" y2="100" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
-                        <line x1="90" y1="120" x2="110" y2="120" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
-                        <line x1="90" y1="140" x2="110" y2="140" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
-                        <line x1="90" y1="160" x2="110" y2="160" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
-                        <line x1="90" y1="180" x2="110" y2="180" stroke="#2D8B7A" strokeWidth="2" opacity="0.6" />
+                                {/* Main title — sliding letters */}
+                                <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-white mb-4 leading-[0.95] hero-title">
+                                    <SlidingText
+                                        text="TARANG"
+                                        className=""
+                                        letterClassName="hero-letter-glow"
+                                        delay={0.4}
+                                        stagger={0.09}
+                                        direction="up"
+                                    />
+                                </h1>
 
-                        {/* Guitar Body */}
-                        <ellipse
-                            cx="100"
-                            cy="320"
-                            rx="80"
-                            ry="120"
-                            fill="url(#guitarGradient)"
-                            className="drop-shadow-[0_0_30px_rgba(45,139,122,0.7)]"
-                        />
-                        {/* Body Curve (Upper) */}
-                        <ellipse
-                            cx="100"
-                            cy="240"
-                            rx="50"
-                            ry="40"
-                            fill="url(#guitarGradient)"
-                        />
-                        {/* Sound Hole */}
-                        <circle
-                            cx="100"
-                            cy="300"
-                            r="25"
-                            fill="#0a0a0f"
-                            stroke="#2D8B7A"
-                            strokeWidth="3"
-                            className="drop-shadow-[0_0_10px_rgba(45,139,122,0.5)]"
-                        />
-                        {/* Bridge */}
-                        <rect
-                            x="85"
-                            y="360"
-                            width="30"
-                            height="8"
-                            rx="2"
-                            fill="#2D8B7A"
-                        />
-                        {/* Strings */}
-                        <line x1="92" y1="60" x2="92" y2="368" stroke="#2D8B7A" strokeWidth="1" opacity="0.8" />
-                        <line x1="96" y1="60" x2="96" y2="368" stroke="#2D8B7A" strokeWidth="1" opacity="0.8" />
-                        <line x1="100" y1="60" x2="100" y2="368" stroke="#2D8B7A" strokeWidth="1" opacity="0.8" />
-                        <line x1="104" y1="60" x2="104" y2="368" stroke="#2D8B7A" strokeWidth="1" opacity="0.8" />
-                        <line x1="108" y1="60" x2="108" y2="368" stroke="#2D8B7A" strokeWidth="1" opacity="0.8" />
+                                {/* Tagline — sliding words */}
+                                <div className="mb-6">
+                                    <SlidingText
+                                        text="Where Music Finds Its Stage"
+                                        className="text-lg md:text-xl lg:text-2xl font-medium tracking-[0.15em] uppercase"
+                                        letterClassName="hero-subtitle-letter"
+                                        delay={1.0}
+                                        stagger={0.035}
+                                        direction="left"
+                                    />
+                                </div>
 
-                        {/* Gradient Definition */}
-                        <defs>
-                            <linearGradient id="guitarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#1E3A5F" />
-                                <stop offset="50%" stopColor="#2D8B7A" />
-                                <stop offset="100%" stopColor="#1E3A5F" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-                {/* Additional glow layers */}
-                <div className="absolute right-20 top-1/2 -translate-y-1/2 w-32 h-96 bg-accent/20 blur-[100px] rounded-full" />
-                <div className="absolute right-40 top-1/3 w-24 h-48 bg-blue-500/10 blur-[80px] rounded-full" />
-            </div>
+                                {/* Decorative divider */}
+                                <motion.div
+                                    initial={{ scaleX: 0, opacity: 0 }}
+                                    animate={{ scaleX: 1, opacity: 1 }}
+                                    transition={{ delay: 1.8, duration: 0.8, ease: "easeOut" }}
+                                    className="mx-auto mb-8 h-[1px] w-48 bg-gradient-to-r from-transparent via-accent/60 to-transparent"
+                                />
 
-            <div className="container-custom relative z-10 px-4 md:px-6 pt-24">
-                <div className="max-w-4xl mx-auto text-center">
-                    {/* Safety badge */}
-                    <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 text-accent px-5 py-2.5 rounded-full mb-8">
-                        <Shield className="w-4 h-4" />
-                        <span className="text-sm font-medium text-white/90">Safety-First Platform</span>
-                    </div>
 
-                    {/* Main headline */}
-                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
-                        Empowering Artists.
-                        <br />
-                        <span className="text-accent">Connecting Safely.</span>
-                    </h1>
 
-                    {/* Subheading */}
-                    <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
-                        A trusted digital platform that connects verified artists with clients for live events.
-                        Secure payments, verified profiles, and safety at every step.
-                    </p>
+                                {/* CTA Buttons — Neon style */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 2.2, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                                    className="flex flex-col sm:flex-row gap-5 justify-center mb-14"
+                                >
+                                    <Link href="/signup?type=artist">
+                                        <button className="neon-btn neon-btn-primary group w-full sm:w-auto">
+                                            <span className="relative z-10 flex items-center justify-center gap-2.5 font-semibold text-lg">
+                                                <Music className="w-6 h-6" />
+                                                Join as Artist
+                                            </span>
+                                        </button>
+                                    </Link>
+                                    <Link href="/signup?type=client">
+                                        <button className="neon-btn neon-btn-outline group w-full sm:w-auto">
+                                            <span className="relative z-10 flex items-center justify-center gap-2.5 font-semibold text-lg">
+                                                <Search className="w-6 h-6" />
+                                                Book an Artist
+                                            </span>
+                                        </button>
+                                    </Link>
+                                </motion.div>
 
-                    {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-                        <Link href="/signup?type=artist">
-                            <Button variant="primary" size="xl" className="w-full sm:w-auto">
-                                <Music className="w-5 h-5 mr-2" />
-                                Join as Artist
-                            </Button>
-                        </Link>
-                        <Link href="/signup?type=client">
-                            <Button variant="outline" size="xl" className="w-full sm:w-auto">
-                                <Search className="w-5 h-5 mr-2" />
-                                Book an Artist
-                            </Button>
-                        </Link>
-                    </div>
 
-                    {/* Trust indicators */}
-                    <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 pt-8 border-t border-white/10">
-                        <div className="flex items-center gap-2 text-white/50">
-                            <div className="p-2 rounded-full bg-white/5 backdrop-blur-sm">
-                                <CheckCircle className="w-4 h-4 text-accent" />
+                                {/* Trust indicators */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 2.6, duration: 0.8 }}
+                                    className="flex flex-wrap items-center justify-center gap-6 md:gap-10 pt-8 border-t border-white/[0.06]"
+                                >
+                                    {[
+                                        { icon: CheckCircle, label: "Verified Clients" },
+                                        { icon: Lock, label: "Escrow Payments" },
+                                        { icon: MapPin, label: "Safety Tracking" },
+                                    ].map(({ icon: Icon, label }) => (
+                                        <div key={label} className="flex items-center gap-2 text-white/45 group">
+                                            <div className="p-2 rounded-full bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] group-hover:border-accent/30 transition-colors duration-300">
+                                                <Icon className="w-4 h-4 text-accent" />
+                                            </div>
+                                            <span className="text-sm font-medium">{label}</span>
+                                        </div>
+                                    ))}
+                                </motion.div>
                             </div>
-                            <span className="text-sm font-medium">Verified Clients</span>
                         </div>
-                        <div className="flex items-center gap-2 text-white/50">
-                            <div className="p-2 rounded-full bg-white/5 backdrop-blur-sm">
-                                <Lock className="w-4 h-4 text-accent" />
-                            </div>
-                            <span className="text-sm font-medium">Escrow Payments</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-white/50">
-                            <div className="p-2 rounded-full bg-white/5 backdrop-blur-sm">
-                                <MapPin className="w-4 h-4 text-accent" />
-                            </div>
-                            <span className="text-sm font-medium">Safety Tracking</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {/* Scroll indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-                <span className="text-white/30 text-xs uppercase tracking-widest">Scroll</span>
-                <div className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center pt-2">
-                    <div className="w-1 h-2 bg-white/40 rounded-full animate-bounce" />
-                </div>
-            </div>
+            {/* ── Scroll Indicator ── */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 3, duration: 1 }}
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+            >
+                <span className="text-white/25 text-[10px] uppercase tracking-[0.25em] font-medium">
+                    Explore
+                </span>
+                <motion.div
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                    <ChevronDown className="w-5 h-5 text-accent/50" />
+                </motion.div>
+            </motion.div>
         </section>
     );
 }

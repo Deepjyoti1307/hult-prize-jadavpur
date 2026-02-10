@@ -14,34 +14,43 @@ import {
     X,
     Upload,
     FileCheck,
-    Loader2,
     CheckCircle2,
     AlertCircle,
 } from 'lucide-react';
+import PulsatingDots from '@/components/ui/pulsating-loader';
 
 // ==================== File Upload Modal ====================
 
 export interface FileUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onUpload: (file: File) => void;
+    onUpload: (file: File) => Promise<void>;
+    onLinkSubmit?: (link: string) => Promise<void>;
     title: string;
     description?: string;
     acceptedTypes?: string;
     maxSizeMB?: number;
+    enableLink?: boolean;
+    linkLabel?: string;
+    linkPlaceholder?: string;
 }
 
 const FileUploadModal = memo(function FileUploadModal({
     isOpen,
     onClose,
     onUpload,
+    onLinkSubmit,
     title,
     description,
     acceptedTypes = 'image/*,video/*,.pdf',
     maxSizeMB = 10,
+    enableLink = false,
+    linkLabel = 'Or paste a link',
+    linkPlaceholder = 'https://youtube.com/...',
 }: FileUploadModalProps) {
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [linkValue, setLinkValue] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -93,15 +102,25 @@ const FileUploadModal = memo(function FileUploadModal({
         if (!selectedFile) return;
 
         setUploading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        onUpload(selectedFile);
+        await onUpload(selectedFile);
         setUploading(false);
         setSelectedFile(null);
         onClose();
     };
 
+    const handleLinkSubmit = async () => {
+        if (!onLinkSubmit || !linkValue.trim()) return;
+
+        setUploading(true);
+        await onLinkSubmit(linkValue.trim());
+        setUploading(false);
+        setLinkValue('');
+        onClose();
+    };
+
     const handleClose = () => {
         setSelectedFile(null);
+        setLinkValue('');
         setError(null);
         onClose();
     };
@@ -188,6 +207,19 @@ const FileUploadModal = memo(function FileUploadModal({
                         )}
                     </div>
 
+                    {enableLink && (
+                        <div className="mt-4">
+                            <label className="block text-white/70 text-sm mb-2">{linkLabel}</label>
+                            <input
+                                type="url"
+                                value={linkValue}
+                                onChange={(e) => setLinkValue(e.target.value)}
+                                placeholder={linkPlaceholder}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-accent/60"
+                            />
+                        </div>
+                    )}
+
                     {/* Error */}
                     {error && (
                         <div className="mt-4 flex items-center gap-2 text-red-400 text-sm">
@@ -204,6 +236,20 @@ const FileUploadModal = memo(function FileUploadModal({
                         >
                             Cancel
                         </button>
+                        {enableLink && (
+                            <button
+                                onClick={handleLinkSubmit}
+                                disabled={uploading || !linkValue.trim()}
+                                className={cn(
+                                    'flex-1 px-4 py-3 rounded-full font-medium transition-all',
+                                    linkValue.trim() && !uploading
+                                        ? 'bg-white/10 hover:bg-white/20 text-white'
+                                        : 'bg-white/5 text-white/30 cursor-not-allowed'
+                                )}
+                            >
+                                Submit Link
+                            </button>
+                        )}
                         <button
                             onClick={handleUploadClick}
                             disabled={!selectedFile || uploading}
@@ -215,10 +261,12 @@ const FileUploadModal = memo(function FileUploadModal({
                             )}
                         >
                             {uploading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                <div className="flex items-center gap-2">
+                                    <div className="scale-75">
+                                        <PulsatingDots />
+                                    </div>
                                     Uploading...
-                                </>
+                                </div>
                             ) : (
                                 'Upload'
                             )}
@@ -531,10 +579,12 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
                                 )}
                             >
                                 {sending ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    <div className="flex items-center gap-2">
+                                        <div className="scale-75">
+                                            <PulsatingDots />
+                                        </div>
                                         Sending OTP...
-                                    </>
+                                    </div>
                                 ) : (
                                     'Send OTP'
                                 )}
@@ -600,10 +650,12 @@ const OTPVerificationModal = memo(function OTPVerificationModal({
                                 )}
                             >
                                 {verifying ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    <div className="flex items-center gap-2">
+                                        <div className="scale-75">
+                                            <PulsatingDots />
+                                        </div>
                                         Verifying...
-                                    </>
+                                    </div>
                                 ) : (
                                     <>
                                         <CheckCircle2 className="w-4 h-4" />

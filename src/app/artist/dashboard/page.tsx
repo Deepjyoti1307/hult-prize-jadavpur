@@ -61,7 +61,6 @@ export default function ArtistDashboard() {
     const verifiedSteps = useMemo(() => {
         const verification = profile?.artistVerification ?? {};
         return [
-            verification.mobile,
             verification.idProof,
             verification.introVideo,
             verification.performanceClip,
@@ -221,7 +220,7 @@ export default function ArtistDashboard() {
                                         </div>
                                         <div>
                                             <p className="text-white/40 mb-0.5">Verification</p>
-                                            <p className="text-accent font-semibold">{verifiedSteps}/5 Steps</p>
+                                            <p className="text-accent font-semibold">{verifiedSteps}/4 Steps</p>
                                         </div>
                                     </div>
                                 </div>

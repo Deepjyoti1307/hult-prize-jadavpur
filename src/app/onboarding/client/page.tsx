@@ -17,10 +17,10 @@ import {
     MapPin,
     ShieldCheck,
     X,
-    Loader2,
     CheckCircle2,
     AlertCircle,
 } from 'lucide-react';
+import PulsatingDots from '@/components/ui/pulsating-loader';
 
 // Google Form URL - Replace with your actual Google Form link
 const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfBHLMGQUamifywVOPFbnCncVaLXZyO8t-OExpAsDibrbf2aw/viewform?usp=publish-editor';
@@ -299,10 +299,12 @@ function LocationModal({
                                 className="w-full py-3 bg-accent hover:bg-accent/80 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {isLoading ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    <div className="flex items-center gap-2">
+                                        <div className="scale-75">
+                                            <PulsatingDots />
+                                        </div>
                                         Getting Location...
-                                    </>
+                                    </div>
                                 ) : (
                                     <>
                                         <MapPin className="w-5 h-5" />

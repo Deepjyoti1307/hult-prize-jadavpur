@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import Logo from "@/components/Logo";
 
 export const metadata = {
     title: "Privacy Policy | TARANG",
@@ -12,10 +13,7 @@ export default function PrivacyPage() {
             {/* Header */}
             <header className="bg-primary text-white py-6">
                 <div className="container-custom px-4 md:px-6">
-                    <Link href="/" className="flex flex-col w-fit">
-                        <span className="text-2xl font-bold text-white italic">TARANG</span>
-                        <span className="text-xs text-white/60">Where music finds its stage</span>
-                    </Link>
+                    <Logo size="md" linkTo="/" />
                 </div>
             </header>
 

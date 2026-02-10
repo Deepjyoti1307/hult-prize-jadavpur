@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { User, Bell, Shield, CreditCard, LogOut, Camera, Save, Mail, MapPin } from 'lucide-react';
+import { User, Bell, Shield, CreditCard, LogOut, Camera, Save, Mail, MapPin, Check } from 'lucide-react';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { uploadProfilePhoto } from '@/lib/appwrite';
 import { useRouter } from 'next/navigation';
+import PulsatingDots from '@/components/ui/pulsating-loader';
 
 export default function SettingsPage() {
     const { profile } = useAuth();
@@ -18,12 +21,16 @@ export default function SettingsPage() {
     const [name, setName] = useState(profile?.name || '');
     const [email, setEmail] = useState(profile?.email || '');
     const [location, setLocation] = useState(profile?.location?.address || '');
+    const [photoURL, setPhotoURL] = useState(profile?.photoURL || '');
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (profile) {
             setName(profile.name || '');
             setEmail(profile.email || '');
             setLocation(profile.location?.address || '');
+            setPhotoURL(profile.photoURL || '');
         }
     }, [profile]);
 
@@ -32,11 +39,52 @@ export default function SettingsPage() {
         return () => stopCanvas();
     }, []);
 
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
     const handleSave = async () => {
+        if (!profile?.uid) return;
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
+        try {
+            const userRef = doc(db, 'users', profile.uid);
+            await updateDoc(userRef, {
+                name,
+                'location.address': location,
+                photoURL,
+                updatedAt: new Date(),
+            });
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+        } catch (error) {
+            console.error('Error saving profile:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handlePhotoClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !profile?.uid) return;
+
+        setIsUploadingPhoto(true);
+        try {
+            const url = await uploadProfilePhoto(file, profile.uid);
+
+            await updateDoc(doc(db, 'users', profile.uid), {
+                photoURL: url,
+                updatedAt: new Date(),
+            });
+
+            setPhotoURL(url);
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+        } finally {
+            setIsUploadingPhoto(false);
+            event.target.value = '';
+        }
     };
 
     const handleLogout = async () => {
@@ -97,10 +145,13 @@ export default function SettingsPage() {
                             {activeTab === 'profile' && (
                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="flex items-center gap-6">
-                                        <div className="relative group cursor-pointer">
+                                        <div
+                                            onClick={handlePhotoClick}
+                                            className="relative group cursor-pointer"
+                                        >
                                             <div className="w-24 h-24 rounded-full bg-white/10 border-2 border-white/10 overflow-hidden">
                                                 <img
-                                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${name || profile?.name || 'User'}`}
+                                                    src={photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${name || profile?.name || 'User'}`}
                                                     alt="Profile"
                                                     className="w-full h-full object-cover"
                                                 />
@@ -108,7 +159,19 @@ export default function SettingsPage() {
                                             <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                                                 <Camera className="w-6 h-6" />
                                             </div>
+                                            {isUploadingPhoto && (
+                                                <div className="absolute inset-0 bg-black/70 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                                    Uploading...
+                                                </div>
+                                            )}
                                         </div>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handlePhotoChange}
+                                        />
                                         <div>
                                             <h2 className="text-xl font-bold text-white mb-1">Profile Photo</h2>
                                             <p className="text-white/50 text-sm">Update your public photo.</p>
@@ -160,11 +223,22 @@ export default function SettingsPage() {
                                     <div className="pt-6 border-t border-white/10 flex justify-end">
                                         <button
                                             onClick={handleSave}
-                                            disabled={isLoading}
-                                            className="px-8 py-3 bg-accent hover:bg-accent-light text-white font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2"
+                                            disabled={isLoading || saveSuccess}
+                                            className={`px-8 py-3 font-bold rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 disabled:scale-100 flex items-center gap-2 ${saveSuccess
+                                                ? 'bg-green-500 text-white shadow-green-500/20'
+                                                : 'bg-accent hover:bg-accent-light text-white shadow-accent/20 disabled:opacity-50'
+                                                }`}
                                         >
-                                            {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-                                            Save Changes
+                                            {isLoading ? (
+                                                <div className="scale-75">
+                                                    <PulsatingDots />
+                                                </div>
+                                            ) : saveSuccess ? (
+                                                <Check className="w-4 h-4" />
+                                            ) : (
+                                                <Save className="w-4 h-4" />
+                                            )}
+                                            {saveSuccess ? 'Saved!' : 'Save Changes'}
                                         </button>
                                     </div>
                                 </div>

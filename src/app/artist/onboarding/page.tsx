@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
+import { uploadVerificationFile } from '@/lib/appwrite';
 import {
     ArtistOnboarding,
     VerificationStep,
@@ -81,17 +82,18 @@ export default function ArtistOnboardingPage() {
     }, [profile]);
 
     const saveArtistProfile = async (
-        updates: Partial<typeof verificationStatus>,
+        updates: Record<string, boolean | string>,
         dataUpdates?: { phoneNumber?: string }
     ) => {
         if (!userId) return;
         const profileRef = doc(db, 'users', userId);
+        const existingVerification = profile?.artistVerification ?? {};
         await setDoc(
             profileRef,
             {
                 role: 'artist',
                 artistVerification: {
-                    ...verificationStatus,
+                    ...existingVerification,
                     ...updates,
                 },
                 ...(dataUpdates ?? {}),
@@ -156,22 +158,37 @@ export default function ArtistOnboardingPage() {
         setShowUploadModal(true);
     };
 
-    const handleUpload = (file: File) => {
-        console.log(`File uploaded for ${currentUpload}:`, file.name);
+    const handleUpload = async (file: File) => {
+        if (!currentUpload || !userId) return;
 
-        // Update verification status based on upload type
+        const { url } = await uploadVerificationFile(file, userId, currentUpload);
+
         if (currentUpload === 'id-proof') {
             setVerificationStatus(prev => ({ ...prev, idProof: true }));
-            saveArtistProfile({ idProof: true });
+            await saveArtistProfile({ idProof: true, idProofUrl: url });
         } else if (currentUpload === 'intro-video') {
             setVerificationStatus(prev => ({ ...prev, introVideo: true }));
-            saveArtistProfile({ introVideo: true });
+            await saveArtistProfile({ introVideo: true, introVideoUrl: url });
         } else if (currentUpload === 'performance-clip') {
             setVerificationStatus(prev => ({ ...prev, performanceClip: true }));
-            saveArtistProfile({ performanceClip: true });
+            await saveArtistProfile({ performanceClip: true, performanceClipUrl: url });
         }
 
         setCurrentUpload(null);
+    };
+
+    const handleLinkSubmit = async (link: string) => {
+        if (!currentUpload) return;
+
+        if (currentUpload === 'intro-video') {
+            setVerificationStatus(prev => ({ ...prev, introVideo: true }));
+            await saveArtistProfile({ introVideo: true, introVideoLink: link });
+        }
+
+        if (currentUpload === 'performance-clip') {
+            setVerificationStatus(prev => ({ ...prev, performanceClip: true }));
+            await saveArtistProfile({ performanceClip: true, performanceClipLink: link });
+        }
     };
 
     const handleApplyForBadge = () => {
@@ -229,10 +246,14 @@ export default function ArtistOnboardingPage() {
                     setCurrentUpload(null);
                 }}
                 onUpload={handleUpload}
+                onLinkSubmit={handleLinkSubmit}
                 title={currentConfig?.title || 'Upload File'}
                 description={currentConfig?.description}
                 acceptedTypes={currentConfig?.acceptedTypes}
                 maxSizeMB={currentConfig?.maxSizeMB}
+                enableLink={currentUpload === 'intro-video' || currentUpload === 'performance-clip'}
+                linkLabel="Or paste a YouTube/Instagram link"
+                linkPlaceholder="https://youtube.com/..."
             />
 
             <Footer />

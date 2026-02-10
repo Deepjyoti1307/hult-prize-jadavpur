@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { Heart, Search, Filter, Loader2, Star, Trash2 } from 'lucide-react';
+import { Heart, Search, Filter, Star, Trash2 } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 import BookingModal from '@/components/BookingModal';
 import Link from 'next/link';

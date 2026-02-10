@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Logo from '@/components/Logo';
 import {
     Home,
     Calendar,
@@ -69,10 +70,7 @@ export default function ArtistSidebar() {
                 </button>
                 {/* Logo */}
                 <div className="p-6 border-b border-white/10">
-                    <Link href="/" className="flex flex-col">
-                        <span className="text-2xl font-bold text-white italic">TARANG</span>
-                        <span className="text-xs text-white/50">Where music finds its stage</span>
-                    </Link>
+                    <Logo size="md" linkTo="/" />
                 </div>
 
                 {/* Navigation */}
