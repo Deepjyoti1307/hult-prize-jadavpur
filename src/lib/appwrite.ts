@@ -22,3 +22,12 @@ export const uploadVerificationFile = async (file: File, userId: string, type: s
         type,
     };
 };
+
+export const uploadIncidentPhoto = async (file: File, incidentId: string): Promise<{ url: string; fileId: string }> => {
+    const uploaded = await storage.createFile(APPWRITE_BUCKET_ID, ID.unique(), file);
+    const viewUrl = storage.getFileView(APPWRITE_BUCKET_ID, uploaded.$id);
+    return {
+        url: viewUrl.toString(),
+        fileId: uploaded.$id,
+    };
+};

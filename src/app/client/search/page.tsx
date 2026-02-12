@@ -9,7 +9,13 @@ import BookingModal from '@/components/BookingModal';
 import { useRouter } from 'next/navigation';
 
 export default function SearchPage() {
-    const { artists, artistsLoading } = useAuth();
+    const {
+        artists,
+        artistsLoading,
+        startConversation,
+        sendMessage,
+        setActiveConversationId,
+    } = useAuth();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -36,6 +42,21 @@ export default function SearchPage() {
     const handleBook = (artist: any) => {
         setSelectedArtist(artist);
         setBookingModalOpen(true);
+    };
+
+    const handleChat = async (artist: any) => {
+        const artistUserId = artist.ownerId || artist.id;
+        try {
+            const convoId = await startConversation(artistUserId, artist.name, artist.image);
+            setActiveConversationId(convoId);
+            await sendMessage(
+                convoId,
+                `Hi ${artist.name}, I'm interested in booking you. Can we discuss the event details?`
+            );
+            router.push('/client/messages');
+        } catch (error) {
+            console.error('Failed to start chat:', error);
+        }
     };
 
     const handleCardClick = (id: string) => {
@@ -157,7 +178,11 @@ export default function SearchPage() {
                                     {filteredArtists.map(artist => (
                                         viewMode === 'grid' ? (
                                             <div key={artist.id} onClick={() => handleCardClick(artist.id)} className="cursor-pointer">
-                                                <ArtistCard {...artist} onBook={() => handleBook(artist)} />
+                                                <ArtistCard
+                                                    {...artist}
+                                                    onBook={() => handleBook(artist)}
+                                                    onChat={() => handleChat(artist)}
+                                                />
                                             </div>
                                         ) : (
                                             <div
@@ -182,17 +207,28 @@ export default function SearchPage() {
                                                     <p className="text-white/60 text-sm flex items-center gap-2 mb-4">
                                                         <MapPin className="w-3 h-3" /> {artist.location}
                                                     </p>
-                                                    <div className="mt-auto flex items-center justify-between">
+                                                    <div className="mt-auto flex items-center justify-between gap-3">
                                                         <span className="text-xl font-bold text-white">₹{artist.price.toLocaleString()}</span>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleBook(artist);
-                                                            }}
-                                                            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all"
-                                                        >
-                                                            Book Now
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleChat(artist);
+                                                                }}
+                                                                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-bold text-sm transition-all"
+                                                            >
+                                                                Chat Now
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleBook(artist);
+                                                                }}
+                                                                className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all"
+                                                            >
+                                                                Book Now
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Calendar, Clock, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { useRouter } from 'next/navigation';
 
 interface BookingModalProps {
     isOpen: boolean;
@@ -28,7 +29,8 @@ export default function BookingModal({
     const [duration, setDuration] = useState(2);
     const [location, setLocation] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const { createBooking } = useAuth();
+    const { createBooking, startConversation, sendMessage, setActiveConversationId } = useAuth();
+    const router = useRouter();
 
     const totalPrice = useMemo(() => artistPrice, [artistPrice]);
 
@@ -61,6 +63,16 @@ export default function BookingModal({
             fee: totalPrice,
             status: 'Pending',
         });
+        try {
+            const convoId = await startConversation(artistId, artistName, artistImage);
+            setActiveConversationId(convoId);
+            await sendMessage(
+                convoId,
+                `Booking request: ${artistName} on ${date} at ${time} for ${duration} hour(s) in ${location}.`
+            );
+        } catch (error) {
+            console.error('Failed to create booking chat:', error);
+        }
         setSubmitting(false);
         setStep(3);
     };
@@ -197,6 +209,12 @@ export default function BookingModal({
                                         <p className="text-white/60 text-sm">
                                             Payment secured. The artist has been notified.
                                         </p>
+                                        <button
+                                            onClick={() => router.push('/client/messages')}
+                                            className="mt-6 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white/80 text-sm font-medium transition-all"
+                                        >
+                                            Open Chat
+                                        </button>
                                     </div>
                                 )}
                             </div>

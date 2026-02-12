@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 export default function FavoritesPage() {
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [selectedArtist, setSelectedArtist] = useState<{ id: string; name: string; image: string; price: number } | null>(null);
-    const { favorites, toggleFavorite } = useAuth();
+    const { favorites, toggleFavorite, startConversation, sendMessage, setActiveConversationId } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
 
@@ -24,6 +24,21 @@ export default function FavoritesPage() {
     const handleBook = (artist: any) => {
         setSelectedArtist({ id: artist.id, name: artist.name, image: artist.image, price: artist.price });
         setBookingModalOpen(true);
+    };
+
+    const handleChat = async (artist: any) => {
+        const artistUserId = artist.ownerId || artist.id;
+        try {
+            const convoId = await startConversation(artistUserId, artist.name, artist.image);
+            setActiveConversationId(convoId);
+            await sendMessage(
+                convoId,
+                `Hi ${artist.name}, I'm interested in booking you. Can we discuss the event details?`
+            );
+            router.push('/client/messages');
+        } catch (error) {
+            console.error('Failed to start chat:', error);
+        }
     };
 
     const handleCardClick = (id: string) => {
@@ -80,6 +95,7 @@ export default function FavoritesPage() {
                                     <ArtistCard
                                         {...artist}
                                         onBook={() => handleBook(artist)}
+                                        onChat={() => handleChat(artist)}
                                     />
                                 </div>
                                 <button

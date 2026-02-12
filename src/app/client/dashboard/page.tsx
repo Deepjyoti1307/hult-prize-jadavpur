@@ -18,6 +18,7 @@ interface Artist {
     rating: number;
     location: string;
     price: number;
+    ownerId?: string;
 }
 
 interface UserLocation {
@@ -31,7 +32,14 @@ export default function ClientDashboard() {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-    const { profile, artists, artistsLoading } = useAuth();
+    const {
+        profile,
+        artists,
+        artistsLoading,
+        startConversation,
+        sendMessage,
+        setActiveConversationId,
+    } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
     const [incidentModalOpen, setIncidentModalOpen] = useState(false);
@@ -44,9 +52,39 @@ export default function ClientDashboard() {
     }, []);
 
     useEffect(() => {
+        // Try stored / profile location first, then auto-detect via GPS
         const storedLocation = localStorage.getItem('userLocation');
         if (storedLocation) {
             setUserLocation(JSON.parse(storedLocation));
+        }
+
+        // Always refresh with live geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        const res = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
+                            { headers: { 'Accept-Language': 'en' } }
+                        );
+                        const data = await res.json();
+                        const loc: UserLocation = {
+                            address: data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+                            coords: { lat: latitude, lng: longitude },
+                        };
+                        setUserLocation(loc);
+                        localStorage.setItem('userLocation', JSON.stringify(loc));
+                    } catch {
+                        setUserLocation({
+                            address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+                            coords: { lat: latitude, lng: longitude },
+                        });
+                    }
+                },
+                () => { /* silently fall back to stored location */ },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+            );
         }
         setIsLoading(false);
     }, []);
@@ -67,6 +105,21 @@ export default function ClientDashboard() {
     const handleBook = (artist: Artist) => {
         setSelectedArtist(artist);
         setBookingModalOpen(true);
+    };
+
+    const handleChat = async (artist: Artist) => {
+        const artistUserId = artist.ownerId || artist.id;
+        try {
+            const convoId = await startConversation(artistUserId, artist.name, artist.image);
+            setActiveConversationId(convoId);
+            await sendMessage(
+                convoId,
+                `Hi ${artist.name}, I'm interested in booking you. Can we discuss the event details?`
+            );
+            router.push('/client/messages');
+        } catch (error) {
+            console.error('Failed to start chat:', error);
+        }
     };
 
     const handleCardClick = (id: string) => {
@@ -182,6 +235,7 @@ export default function ClientDashboard() {
                                             <ArtistCard
                                                 {...artist}
                                                 onBook={() => handleBook(artist)}
+                                                onChat={() => handleChat(artist)}
                                             />
                                         </div>
                                     ))}

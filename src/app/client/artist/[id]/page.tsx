@@ -4,6 +4,7 @@ import { ArrowLeft, Star, MapPin, Music, Play, Share2, Heart, CheckCircle2, Cloc
 import Image from 'next/image';
 import { useMemo, useState, useEffect } from 'react';
 import BookingModal from '@/components/BookingModal';
+import ProfileCard from '@/components/ProfileCard';
 import { useAuth } from '@/contexts/auth-context';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import { useRouter } from 'next/navigation';
@@ -80,48 +81,64 @@ export default function ArtistDetailsPage({ params }: { params: { id: string } }
 
             <div className="relative z-10 w-full max-w-7xl mx-auto md:px-6 md:pt-6">
 
-                {/* Hero Section */}
-                <div className="relative md:rounded-[2.5rem] overflow-hidden aspect-[3/4] md:aspect-[21/9] mb-8 group shadow-2xl shadow-black/50">
-                    <Image
-                        src={artist.image}
-                        alt={artist.name}
-                        fill
-                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/40 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/20" />
+                {/* Hero Section — Holographic Profile Card + Info */}
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-16 mb-12 pt-16 md:pt-20 px-6 md:px-0">
+                    {/* Holographic Profile Card */}
+                    <div className="flex-shrink-0 w-full max-w-[320px] lg:max-w-[360px]">
+                        <ProfileCard
+                            avatarUrl={artist.image}
+                            name={artist.name}
+                            title={artist.category}
+                            handle={artist.name.toLowerCase().replace(/\s+/g, '')}
+                            status={`⭐ ${artist.rating} · ${artist.reviews} reviews`}
+                            contactText="Book Now"
+                            showUserInfo={true}
+                            onContactClick={() => setBookingModalOpen(true)}
+                            behindGlowColor="rgba(45, 139, 122, 0.45)"
+                            behindGlowSize="55%"
+                        />
+                    </div>
 
-                    <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                            <div className="space-y-4">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <span className="px-4 py-1.5 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-lg shadow-accent/20">
-                                        {artist.category}
-                                    </span>
-                                    <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-yellow-400 text-sm font-bold border border-white/10">
-                                        <Star className="w-4 h-4 fill-current" />
-                                        {artist.rating}
-                                        <span className="text-white/60 font-medium ml-1">({artist.reviews})</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-green-500/20 backdrop-blur-md px-3 py-1.5 rounded-full text-green-400 text-xs font-bold border border-green-500/20">
-                                        <Shield className="w-3 h-3" />
-                                        VERIFIED
-                                    </div>
-                                </div>
-                                <div>
-                                    <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">{artist.name}</h1>
-                                    <p className="text-white/80 flex items-center gap-2 text-lg font-medium drop-shadow-md">
-                                        <MapPin className="w-5 h-5 text-accent" /> {artist.location}
-                                    </p>
-                                </div>
+                    {/* Artist Info Panel */}
+                    <div className="flex-1 flex flex-col justify-center gap-6 lg:pt-12">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="px-4 py-1.5 bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-lg shadow-accent/20">
+                                {artist.category}
+                            </span>
+                            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-yellow-400 text-sm font-bold border border-white/10">
+                                <Star className="w-4 h-4 fill-current" />
+                                {artist.rating}
+                                <span className="text-white/60 font-medium ml-1">({artist.reviews})</span>
                             </div>
+                            <div className="flex items-center gap-1.5 bg-green-500/20 backdrop-blur-md px-3 py-1.5 rounded-full text-green-400 text-xs font-bold border border-green-500/20">
+                                <Shield className="w-3 h-3" />
+                                VERIFIED
+                            </div>
+                        </div>
 
-                            <div className="block md:text-right bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 md:bg-transparent md:backdrop-blur-none md:p-0 md:border-0">
-                                <p className="text-white/60 text-sm font-medium mb-1">Starting from</p>
-                                <p className="text-4xl font-bold text-white tracking-tight">₹{artist.price.toLocaleString()}</p>
-                                <p className="text-accent text-sm font-bold mt-1">per event</p>
-                            </div>
+                        <div>
+                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight mb-3 drop-shadow-lg">{artist.name}</h1>
+                            <p className="text-white/80 flex items-center gap-2 text-lg font-medium drop-shadow-md">
+                                <MapPin className="w-5 h-5 text-accent" /> {artist.location}
+                            </p>
+                        </div>
+
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 inline-flex flex-col max-w-xs">
+                            <p className="text-white/60 text-sm font-medium mb-1">Starting from</p>
+                            <p className="text-4xl font-bold text-white tracking-tight">₹{artist.price.toLocaleString()}</p>
+                            <p className="text-accent text-sm font-bold mt-1">per event</p>
+                        </div>
+
+                        <p className="text-white/60 leading-relaxed text-base font-light max-w-lg hidden lg:block">
+                            {artist.bio}
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 hidden lg:flex">
+                            {artist.tags.map((tag, i) => (
+                                <span key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white/70 text-sm font-medium hover:text-white hover:bg-white/10 transition-colors">
+                                    #{tag}
+                                </span>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -129,8 +146,8 @@ export default function ArtistDetailsPage({ params }: { params: { id: string } }
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-6 md:px-0">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-12">
-                        {/* Bio */}
-                        <section>
+                        {/* Bio — visible on mobile, hidden on lg since it's in hero */}
+                        <section className="lg:hidden">
                             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                                 About <span className="w-12 h-1 bg-accent rounded-full ml-2"></span>
                             </h2>

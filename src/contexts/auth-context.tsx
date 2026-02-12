@@ -643,7 +643,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         // Get the other participant to update unread count
-        const convo = conversations.find((c) => c.id === conversationId);
+        let convo = conversations.find((c) => c.id === conversationId);
+        if (!convo) {
+            const convoSnap = await getDoc(doc(db, 'conversations', conversationId));
+            if (convoSnap.exists()) {
+                convo = {
+                    id: convoSnap.id,
+                    ...(convoSnap.data() as Omit<Conversation, 'id'>),
+                };
+            }
+        }
         const otherUserId = convo?.participants.find((p) => p !== user.uid);
 
         // Update conversation with last message

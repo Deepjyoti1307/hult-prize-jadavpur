@@ -10,7 +10,6 @@ import {
     Calendar,
     MessageSquare,
     Wallet,
-    Shield,
     Settings,
     Siren,
     Menu,
@@ -23,7 +22,6 @@ const navigationItems = [
     { name: 'Bookings', href: '/artist/bookings', icon: Calendar },
     { name: 'Messages', href: '/artist/messages', icon: MessageSquare, badge: 0 },
     { name: 'Earnings', href: '/artist/earnings', icon: Wallet },
-    { name: 'Safety', href: '/artist/safety', icon: Shield },
     { name: 'Settings', href: '/artist/settings', icon: Settings },
 ];
 
@@ -105,7 +103,7 @@ export default function ArtistSidebar() {
 
                 {/* Emergency Button - Movie Style */}
                 <div className="p-4 border-t border-white/10">
-                    <Link href="/artist/emergency" onClick={() => setOpen(false)}>
+                    <Link href="/artist/safety" onClick={() => setOpen(false)}>
                         <div className="relative group cursor-pointer">
                             {/* Pulsing background glow */}
                             <div className="absolute inset-0 bg-red-500/20 rounded-2xl blur-lg group-hover:bg-red-500/30 transition-all animate-pulse" />
