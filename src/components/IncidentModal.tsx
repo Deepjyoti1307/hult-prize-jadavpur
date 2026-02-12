@@ -306,8 +306,8 @@ export default function IncidentModal({ isOpen, onClose, bookingId }: IncidentMo
                                                             key={cat.value}
                                                             onClick={() => setIncidentType(cat.value)}
                                                             className={`text-left p-3.5 rounded-2xl border transition-all duration-200 group ${incidentType === cat.value
-                                                                    ? 'bg-red-500/10 border-red-500/40 shadow-lg shadow-red-900/10'
-                                                                    : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/10'
+                                                                ? 'bg-red-500/10 border-red-500/40 shadow-lg shadow-red-900/10'
+                                                                : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/10'
                                                                 }`}
                                                         >
                                                             <span className="text-xl mb-1.5 block">{cat.icon}</span>
@@ -339,8 +339,8 @@ export default function IncidentModal({ isOpen, onClose, bookingId }: IncidentMo
                                                                 key={sev.value}
                                                                 onClick={() => setSeverity(sev.value)}
                                                                 className={`px-2 py-2.5 rounded-xl border text-center transition-all duration-200 ${severity === sev.value
-                                                                        ? sev.color + ' ring-1 ring-current/20'
-                                                                        : 'bg-white/[0.02] border-white/[0.06] text-white/40 hover:bg-white/[0.04]'
+                                                                    ? sev.color + ' ring-1 ring-current/20'
+                                                                    : 'bg-white/[0.02] border-white/[0.06] text-white/40 hover:bg-white/[0.04]'
                                                                     }`}
                                                             >
                                                                 <span className="text-xs font-bold block">{sev.label}</span>

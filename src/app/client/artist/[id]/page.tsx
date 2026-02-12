@@ -67,8 +67,8 @@ export default function ArtistDetailsPage({ params }: { params: { id: string } }
                     <button
                         onClick={() => toggleFavorite(artist)}
                         className={`p-3 backdrop-blur-xl rounded-full transition-all border ${isFavorite
-                                ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20'
-                                : 'bg-black/20 hover:bg-black/40 text-white border-white/5'
+                            ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20'
+                            : 'bg-black/20 hover:bg-black/40 text-white border-white/5'
                             }`}
                     >
                         <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />

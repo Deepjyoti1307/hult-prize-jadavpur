@@ -247,13 +247,12 @@ export default function ArtistSafety() {
                                 >
                                     <button
                                         onClick={triggerSOS}
-                                        className={`relative w-full py-6 rounded-3xl font-bold text-xl shadow-2xl transition-all active:scale-[0.97] overflow-hidden group ${
-                                            sosActive
+                                        className={`relative w-full py-6 rounded-3xl font-bold text-xl shadow-2xl transition-all active:scale-[0.97] overflow-hidden group ${sosActive
                                                 ? 'bg-red-600 text-white shadow-red-600/40 animate-pulse'
                                                 : sosCountdown > 0
-                                                ? 'bg-orange-600 text-white shadow-orange-600/30'
-                                                : 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-red-600/30 hover:shadow-red-500/50'
-                                        }`}
+                                                    ? 'bg-orange-600 text-white shadow-orange-600/30'
+                                                    : 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-red-600/30 hover:shadow-red-500/50'
+                                            }`}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                         <span className="relative z-10 flex items-center justify-center gap-3">
@@ -341,11 +340,10 @@ export default function ArtistSafety() {
                                     <button
                                         onClick={isTracking ? stopTracking : startTracking}
                                         disabled={locationLoading}
-                                        className={`px-8 py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 ${
-                                            isTracking
+                                        className={`px-8 py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 ${isTracking
                                                 ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
                                                 : 'bg-accent text-white shadow-lg shadow-accent/20 hover:shadow-accent/40'
-                                        }`}
+                                            }`}
                                     >
                                         {locationLoading ? (
                                             <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</>
@@ -438,11 +436,10 @@ export default function ArtistSafety() {
                             className="bg-white/[0.03] border border-white/[0.06] rounded-3xl p-6"
                         >
                             <div className="flex items-center gap-3 mb-4">
-                                <div className={`p-3 rounded-2xl border ${
-                                    profile?.adminApproval?.status === 'approved'
+                                <div className={`p-3 rounded-2xl border ${profile?.adminApproval?.status === 'approved'
                                         ? 'bg-green-500/10 border-green-500/20 text-green-400'
                                         : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                                }`}>
+                                    }`}>
                                     <Shield className="w-7 h-7" />
                                 </div>
                                 {profile?.adminApproval?.status === 'approved' && (
