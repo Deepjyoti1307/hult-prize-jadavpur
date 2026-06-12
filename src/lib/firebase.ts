@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -18,6 +19,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const rtdb = getDatabase(app);
 const storage = getStorage(app);
 
 const analyticsPromise =
@@ -25,4 +27,4 @@ const analyticsPromise =
         ? isSupported().then((supported) => (supported ? getAnalytics(app) : null))
         : Promise.resolve(null);
 
-export { app, auth, db, storage, analyticsPromise };
+export { app, auth, db, rtdb, storage, analyticsPromise };

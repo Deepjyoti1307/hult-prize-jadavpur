@@ -14,6 +14,7 @@ import {
     collection,
     deleteDoc,
     doc,
+    getDocs,
     getDoc,
     onSnapshot,
     orderBy,
@@ -21,9 +22,17 @@ import {
     serverTimestamp,
     setDoc,
     updateDoc,
+    writeBatch,
     where,
 } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import {
+    onDisconnect,
+    onValue,
+    ref as rtdbRef,
+    serverTimestamp as rtdbServerTimestamp,
+    set as rtdbSet,
+} from 'firebase/database';
+import { auth, db, rtdb } from '@/lib/firebase';
 
 export type ArtistProfile = {
     id: string;
@@ -149,6 +158,8 @@ type AuthContextValue = {
     conversations: Conversation[];
     messages: Message[];
     activeConversationId: string | null;
+    typingByConversation: Record<string, string[]>;
+    presenceByUser: Record<string, { online: boolean; lastChanged: number | null }>;
     transactions: Transaction[];
     toggleFavorite: (artist: ArtistProfile) => Promise<void>;
     createBooking: (input: Omit<Booking, 'id' | 'clientId' | 'status'> & { status?: Booking['status'] }) => Promise<void>;
@@ -159,6 +170,7 @@ type AuthContextValue = {
     startConversation: (otherUserId: string, otherUserName: string, otherUserImage: string) => Promise<string>;
     sendMessage: (conversationId: string, text: string) => Promise<void>;
     setActiveConversationId: (id: string | null) => void;
+    setTyping: (conversationId: string, isTyping: boolean) => Promise<void>;
     markConversationRead: (conversationId: string) => Promise<void>;
 };
 
@@ -176,6 +188,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+    const [typingByConversation, setTypingByConversation] = useState<Record<string, string[]>>({});
+    const [presenceByUser, setPresenceByUser] = useState<Record<string, { online: boolean; lastChanged: number | null }>>({});
     const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
@@ -326,6 +340,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setArtistBookings([]);
                 setConversations([]);
                 setMessages([]);
+                setTypingByConversation({});
+                setPresenceByUser({});
                 setTransactions([]);
                 setActiveConversationId(null);
                 setLoading(false);
@@ -485,6 +501,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+    // Realtime Database presence: current user online/offline with onDisconnect
+    useEffect(() => {
+        if (!user) return;
+
+        const statusRef = rtdbRef(rtdb, `/status/${user.uid}`);
+        const connectedRef = rtdbRef(rtdb, '.info/connected');
+
+        const unsubscribe = onValue(connectedRef, async (snapshot) => {
+            if (snapshot.val() === false) return;
+
+            await onDisconnect(statusRef).set({
+                online: false,
+                lastChanged: rtdbServerTimestamp(),
+            });
+
+            await rtdbSet(statusRef, {
+                online: true,
+                lastChanged: rtdbServerTimestamp(),
+            });
+        });
+
+        return () => {
+            unsubscribe();
+            rtdbSet(statusRef, {
+                online: false,
+                lastChanged: Date.now(),
+            });
+        };
+    }, [user]);
+
+    // Presence listeners for conversation participants
+    useEffect(() => {
+        if (!user) return;
+
+        const participantIds = Array.from(
+            new Set(
+                conversations.flatMap((c) => c.participants).filter((id) => id && id !== user.uid)
+            )
+        );
+
+        if (participantIds.length === 0) {
+            setPresenceByUser({});
+            return;
+        }
+
+        const unsubs = participantIds.map((uid) =>
+            onValue(rtdbRef(rtdb, `/status/${uid}`), (snapshot) => {
+                const val = snapshot.val() as { online?: boolean; lastChanged?: number } | null;
+                setPresenceByUser((prev) => ({
+                    ...prev,
+                    [uid]: {
+                        online: !!val?.online,
+                        lastChanged: val?.lastChanged ?? null,
+                    },
+                }));
+            })
+        );
+
+        return () => {
+            unsubs.forEach((u) => u());
+        };
+    }, [user, conversations]);
+
     const toggleFavorite = async (artist: ArtistProfile) => {
         if (!user) return;
         const favoriteRef = doc(db, 'users', user.uid, 'favorites', artist.id);
@@ -591,6 +670,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribe();
     }, [activeConversationId, user]);
 
+    // Listen typing users for active conversation
+    useEffect(() => {
+        if (!activeConversationId || !user) return;
+
+        const typingRef = collection(db, 'conversations', activeConversationId, 'typing');
+        const unsubscribe = onSnapshot(typingRef, (snapshot) => {
+            const typingUserIds = snapshot.docs
+                .map((d) => ({ id: d.id, ...(d.data() as { isTyping?: boolean }) }))
+                .filter((item) => item.isTyping && item.id !== user.uid)
+                .map((item) => item.id);
+
+            setTypingByConversation((prev) => ({
+                ...prev,
+                [activeConversationId]: typingUserIds,
+            }));
+        });
+
+        return () => {
+            unsubscribe();
+            setTypingByConversation((prev) => ({
+                ...prev,
+                [activeConversationId]: [],
+            }));
+        };
+    }, [activeConversationId, user]);
+
     // Start or get existing conversation
     const startConversation = async (
         otherUserId: string,
@@ -668,6 +773,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
             { merge: true }
         );
+
+        // Clear typing state after successful send
+        await setDoc(
+            doc(db, 'conversations', conversationId, 'typing', user.uid),
+            {
+                isTyping: false,
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
+    };
+
+    // Typing state
+    const setTyping = async (conversationId: string, isTyping: boolean): Promise<void> => {
+        if (!user) return;
+
+        await setDoc(
+            doc(db, 'conversations', conversationId, 'typing', user.uid),
+            {
+                userId: user.uid,
+                isTyping,
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
     };
 
     // Mark conversation as read
@@ -681,6 +811,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
             { merge: true }
         );
+
+        // Mark unread incoming messages as read
+        const unreadRef = query(
+            collection(db, 'conversations', conversationId, 'messages'),
+            where('read', '==', false)
+        );
+        const unreadSnap = await getDocs(unreadRef);
+
+        if (!unreadSnap.empty) {
+            const batch = writeBatch(db);
+            unreadSnap.docs.forEach((docSnap) => {
+                const data = docSnap.data() as Message;
+                if (data.senderId !== user.uid) {
+                    batch.update(docSnap.ref, {
+                        read: true,
+                        readAt: serverTimestamp(),
+                    });
+                }
+            });
+            await batch.commit();
+        }
     };
 
     const value = useMemo(
@@ -696,6 +847,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             conversations,
             messages,
             activeConversationId,
+            typingByConversation,
+            presenceByUser,
             transactions,
             toggleFavorite,
             createBooking,
@@ -706,6 +859,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             startConversation,
             sendMessage,
             setActiveConversationId,
+            setTyping,
             markConversationRead,
         }),
         [
@@ -720,6 +874,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             conversations,
             messages,
             activeConversationId,
+            typingByConversation,
+            presenceByUser,
             transactions,
         ]
     );

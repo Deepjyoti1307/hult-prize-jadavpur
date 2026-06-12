@@ -401,105 +401,6 @@ function GridFloor() {
 }
 
 /* ═══════════════════════════════════════════
-   FLOATING 3D MUSICAL NOTES
-   ═══════════════════════════════════════════ */
-
-function useNoteShape() {
-  return useMemo(() => {
-    // ♪ note head (oval)
-    const head = new THREE.Shape();
-    head.ellipse(0, 0, 0.14, 0.1, 0, Math.PI * 2, false, -0.3);
-    return head;
-  }, []);
-}
-
-function MusicalNote({ startPos, speed, rotSpeed, dir, color, scale }: {
-  startPos: [number, number, number];
-  speed: number;
-  rotSpeed: number;
-  dir: [number, number, number];
-  color: string;
-  scale: number;
-}) {
-  const group = useRef<THREE.Group>(null!);
-  const noteShape = useNoteShape();
-  const noteExtrude = useMemo(() => ({
-    depth: 0.03, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 3, curveSegments: 16,
-  }), []);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    // Float in assigned direction, loop back when too far
-    const cycle = (t * speed) % 18 - 9;
-    group.current.position.x = startPos[0] + dir[0] * cycle;
-    group.current.position.y = startPos[1] + dir[1] * cycle + Math.sin(t * 0.8 + startPos[0]) * 0.5;
-    group.current.position.z = startPos[2] + dir[2] * cycle;
-    group.current.rotation.x = t * rotSpeed * 0.4;
-    group.current.rotation.y = t * rotSpeed * 0.6;
-    group.current.rotation.z = Math.sin(t * 0.5 + startPos[1]) * 0.3;
-  });
-
-  return (
-    <group ref={group} scale={scale}>
-      {/* Note head */}
-      <mesh rotation={[0, 0, -0.3]}>
-        <extrudeGeometry args={[noteShape, noteExtrude]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} metalness={0.8} roughness={0.2} toneMapped={false} />
-      </mesh>
-      {/* Stem */}
-      <mesh position={[0.12, 0.45, 0.015]}>
-        <boxGeometry args={[0.025, 0.9, 0.025]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} metalness={0.85} roughness={0.15} toneMapped={false} />
-      </mesh>
-      {/* Flag */}
-      <mesh position={[0.19, 0.75, 0.015]} rotation={[0, 0, -0.4]}>
-        <planeGeometry args={[0.2, 0.35]} />
-        <meshBasicMaterial color={color} transparent opacity={0.5} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      {/* Glow sphere around note */}
-      <mesh position={[0, 0.2, 0]}>
-        <sphereGeometry args={[0.35, 8, 8]} />
-        <meshBasicMaterial color={color} transparent opacity={0.04} toneMapped={false} />
-      </mesh>
-    </group>
-  );
-}
-
-function FloatingNotes() {
-  const notes = useMemo(() => {
-    const colors = ["#2D8B7A", "#3AA08C", "#1E3A5F", "#2A4A73", "#ffffff"];
-    return Array.from({ length: 18 }, (_, i) => {
-      const angle = (i / 18) * Math.PI * 2;
-      const r = 3 + Math.random() * 5;
-      return {
-        startPos: [
-          Math.cos(angle) * r * (0.5 + Math.random()),
-          (Math.random() - 0.5) * 8,
-          (Math.random() - 0.5) * 6 - 2,
-        ] as [number, number, number],
-        speed: 0.15 + Math.random() * 0.3,
-        rotSpeed: 0.3 + Math.random() * 0.8,
-        dir: [
-          Math.cos(angle + Math.random()) * 0.4,
-          (Math.random() - 0.5) * 0.3,
-          Math.sin(angle + Math.random()) * 0.3,
-        ] as [number, number, number],
-        color: colors[i % colors.length],
-        scale: 0.35 + Math.random() * 0.5,
-      };
-    });
-  }, []);
-
-  return (
-    <group>
-      {notes.map((n, i) => (
-        <MusicalNote key={i} {...n} />
-      ))}
-    </group>
-  );
-}
-
-/* ═══════════════════════════════════════════
    MOUSE-REACTIVE CAMERA
    ═══════════════════════════════════════════ */
 function MouseCamera() {
@@ -537,7 +438,6 @@ export default function Hero3DScene() {
 
             {/* 3D Elements */}
             <RockGuitar />
-            <FloatingNotes />
             <SoundWaves />
             <StringEnergy />
             <EqualizerRing />

@@ -16,17 +16,29 @@ export default function MessagesPage() {
         setActiveConversationId,
         sendMessage,
         markConversationRead,
-        artists
+        setTyping,
+        typingByConversation,
+        presenceByUser,
     } = useAuth();
 
     const [messageInput, setMessageInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sending, setSending] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [speechSupported, setSpeechSupported] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
         renderCanvas();
         return () => stopCanvas();
+    }, []);
+
+    useEffect(() => {
+        setSpeechSupported(typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window));
     }, []);
 
     // Scroll to bottom when messages change
@@ -41,10 +53,40 @@ export default function MessagesPage() {
         }
     }, [activeConversationId, markConversationRead]);
 
+    useEffect(() => {
+        if (!activeConversationId) return;
+
+        if (!messageInput.trim()) {
+            setTyping(activeConversationId, false);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            return;
+        }
+
+        setTyping(activeConversationId, true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            setTyping(activeConversationId, false);
+        }, 900);
+
+        return () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        };
+    }, [messageInput, activeConversationId, setTyping]);
+
+    useEffect(() => {
+        return () => {
+            if (activeConversationId) {
+                setTyping(activeConversationId, false);
+            }
+        };
+    }, [activeConversationId, setTyping]);
+
     const activeConversation = conversations.find(c => c.id === activeConversationId);
     const otherUserId = activeConversation?.participants.find(p => p !== user?.uid);
     const otherUserName = otherUserId ? activeConversation?.participantNames?.[otherUserId] : 'User';
     const otherUserImage = otherUserId ? activeConversation?.participantImages?.[otherUserId] : '';
+    const isOtherUserTyping = !!(activeConversationId && typingByConversation[activeConversationId]?.length);
+    const isOtherOnline = !!(otherUserId && presenceByUser[otherUserId]?.online);
 
     const filteredConversations = conversations.filter(c => {
         const otherId = c.participants.find(p => p !== user?.uid);
@@ -60,11 +102,49 @@ export default function MessagesPage() {
         try {
             await sendMessage(activeConversationId, messageInput.trim());
             setMessageInput('');
+            await setTyping(activeConversationId, false);
         } catch (error) {
             console.error('Failed to send message:', error);
         } finally {
             setSending(false);
         }
+    };
+
+    const addEmoji = (emoji: string) => {
+        setMessageInput((prev) => `${prev}${emoji}`);
+    };
+
+    const handlePickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !activeConversationId) return;
+        const label = `📎 Image: ${file.name}`;
+        await sendMessage(activeConversationId, label);
+        e.target.value = '';
+    };
+
+    const startVoiceTyping = () => {
+        if (!speechSupported) return;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+        recognition.lang = 'en-IN';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onerror = () => setIsRecording(false);
+        recognition.onresult = (event: any) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            setMessageInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        };
+
+        recognition.start();
     };
 
     const formatTime = (timestamp: unknown) => {
@@ -144,6 +224,7 @@ export default function MessagesPage() {
                                                 <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
                                                     <img src={image || `https://api.dicebear.com/7.x/initials/svg?seed=${name}`} alt={name} className="w-full h-full object-cover" />
                                                 </div>
+                                                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0a0a0f] ${presenceByUser[otherId || '']?.online ? 'bg-emerald-400' : 'bg-white/30'}`} />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-baseline mb-1">
@@ -155,7 +236,7 @@ export default function MessagesPage() {
                                                     </span>
                                                 </div>
                                                 <p className={`text-sm truncate ${unread > 0 ? 'text-white font-medium' : 'text-white/50'}`}>
-                                                    {chat.lastMessage || 'No messages yet'}
+                                                    {typingByConversation[chat.id]?.length ? 'typing…' : (chat.lastMessage || 'No messages yet')}
                                                 </p>
                                             </div>
                                             {unread > 0 && (
@@ -191,7 +272,7 @@ export default function MessagesPage() {
                                     </div>
                                     <div>
                                         <h2 className="text-lg font-bold text-white">{otherUserName}</h2>
-                                        <p className="text-xs text-white/50">Click to view profile</p>
+                                        <p className="text-xs text-white/50">{isOtherUserTyping ? 'typing…' : isOtherOnline ? 'Online' : 'Offline'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -235,6 +316,13 @@ export default function MessagesPage() {
                                                 </div>
                                             </div>
                                         ))}
+                                        {isOtherUserTyping && (
+                                            <div className="flex justify-start">
+                                                <div className="max-w-[80%] md:max-w-[60%] rounded-2xl px-5 py-3 bg-white/10 text-white rounded-bl-none border border-white/5">
+                                                    <p className="leading-relaxed text-white/70">typing…</p>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div ref={messagesEndRef} />
                                     </>
                                 )}
@@ -244,10 +332,10 @@ export default function MessagesPage() {
                             <div className="p-4 md:p-6 bg-white/5 border-t border-white/10">
                                 <form onSubmit={handleSend} className="flex gap-4 items-end">
                                     <div className="flex gap-2 pb-3">
-                                        <button type="button" className="p-2 text-white/40 hover:text-white transition-colors">
+                                        <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-white/40 hover:text-white transition-colors">
                                             <ImageIcon className="w-5 h-5" />
                                         </button>
-                                        <button type="button" className="p-2 text-white/40 hover:text-white transition-colors">
+                                        <button type="button" onClick={startVoiceTyping} className={`p-2 transition-colors ${isRecording ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
                                             <Mic className="w-5 h-5" />
                                         </button>
                                     </div>
@@ -259,7 +347,7 @@ export default function MessagesPage() {
                                             placeholder="Type a message..."
                                             className="flex-1 bg-transparent border-none text-white focus:ring-0 placeholder:text-white/30 px-3 py-2"
                                         />
-                                        <button type="button" className="p-2 text-white/40 hover:text-accent transition-colors">
+                                        <button type="button" onClick={() => setShowEmojiPicker((v) => !v)} className="p-2 text-white/40 hover:text-accent transition-colors">
                                             <Smile className="w-5 h-5" />
                                         </button>
                                     </div>
@@ -277,6 +365,21 @@ export default function MessagesPage() {
                                         )}
                                     </button>
                                 </form>
+                                {showEmojiPicker && (
+                                    <div className="mt-3 p-3 bg-black/30 border border-white/10 rounded-xl flex flex-wrap gap-2">
+                                        {['😀', '😂', '😍', '🔥', '🎵', '🙏', '👍', '❤️', '👏', '✨'].map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                type="button"
+                                                onClick={() => addEmoji(emoji)}
+                                                className="text-lg hover:scale-110 transition-transform"
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickImage} className="hidden" />
                             </div>
                         </>
                     ) : (

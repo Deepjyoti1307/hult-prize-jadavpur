@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ArtistSidebar from '@/components/ArtistSidebar';
 import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
-import { Search, MoreVertical, Phone, Video, Image as ImageIcon, Mic, Send, MessageSquare, CheckCheck } from 'lucide-react';
+import { Search, MoreVertical, Phone, Video, Image as ImageIcon, Mic, Send, MessageSquare, CheckCheck, Smile } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import PulsatingDots from '@/components/ui/pulsating-loader';
 
@@ -16,17 +16,30 @@ export default function ArtistMessages() {
         activeConversationId,
         setActiveConversationId,
         sendMessage,
-        markConversationRead
+        markConversationRead,
+        setTyping,
+        typingByConversation,
+        presenceByUser,
     } = useAuth();
 
     const [messageInput, setMessageInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [sending, setSending] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [speechSupported, setSpeechSupported] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
         renderCanvas();
         return () => stopCanvas();
+    }, []);
+
+    useEffect(() => {
+        setSpeechSupported(typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window));
     }, []);
 
     // Scroll to bottom when messages change
@@ -41,10 +54,40 @@ export default function ArtistMessages() {
         }
     }, [activeConversationId, markConversationRead]);
 
+    useEffect(() => {
+        if (!activeConversationId) return;
+
+        if (!messageInput.trim()) {
+            setTyping(activeConversationId, false);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            return;
+        }
+
+        setTyping(activeConversationId, true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            setTyping(activeConversationId, false);
+        }, 900);
+
+        return () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        };
+    }, [messageInput, activeConversationId, setTyping]);
+
+    useEffect(() => {
+        return () => {
+            if (activeConversationId) {
+                setTyping(activeConversationId, false);
+            }
+        };
+    }, [activeConversationId, setTyping]);
+
     const activeConversation = conversations.find(c => c.id === activeConversationId);
     const otherUserId = activeConversation?.participants.find(p => p !== user?.uid);
     const otherUserName = otherUserId ? activeConversation?.participantNames?.[otherUserId] : 'User';
     const otherUserImage = otherUserId ? activeConversation?.participantImages?.[otherUserId] : '';
+    const isOtherUserTyping = !!(activeConversationId && typingByConversation[activeConversationId]?.length);
+    const isOtherOnline = !!(otherUserId && presenceByUser[otherUserId]?.online);
 
     const filteredConversations = conversations.filter(c => {
         const otherId = c.participants.find(p => p !== user?.uid);
@@ -60,11 +103,49 @@ export default function ArtistMessages() {
         try {
             await sendMessage(activeConversationId, messageInput.trim());
             setMessageInput('');
+            await setTyping(activeConversationId, false);
         } catch (error) {
             console.error('Failed to send message:', error);
         } finally {
             setSending(false);
         }
+    };
+
+    const addEmoji = (emoji: string) => {
+        setMessageInput((prev) => `${prev}${emoji}`);
+    };
+
+    const handlePickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !activeConversationId) return;
+        const label = `📎 Image: ${file.name}`;
+        await sendMessage(activeConversationId, label);
+        e.target.value = '';
+    };
+
+    const startVoiceTyping = () => {
+        if (!speechSupported) return;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+        recognition.lang = 'en-IN';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onend = () => setIsRecording(false);
+        recognition.onerror = () => setIsRecording(false);
+        recognition.onresult = (event: any) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            setMessageInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        };
+
+        recognition.start();
     };
 
     const formatTime = (timestamp: unknown) => {
@@ -149,6 +230,7 @@ export default function ArtistMessages() {
                                                         getInitials(name || '')
                                                     )}
                                                 </div>
+                                                <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0a0a0f] ${presenceByUser[otherId || '']?.online ? 'bg-emerald-400' : 'bg-white/30'}`} />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start">
@@ -158,7 +240,7 @@ export default function ArtistMessages() {
                                                     </span>
                                                 </div>
                                                 <p className={`text-sm truncate ${unread > 0 ? 'text-white font-medium' : 'text-white/60'}`}>
-                                                    {chat.lastMessage || 'No messages yet'}
+                                                    {typingByConversation[chat.id]?.length ? 'typing…' : (chat.lastMessage || 'No messages yet')}
                                                 </p>
                                             </div>
                                             {unread > 0 && (
@@ -195,7 +277,7 @@ export default function ArtistMessages() {
                                         </div>
                                         <div>
                                             <h3 className="text-white font-bold">{otherUserName}</h3>
-                                            <p className="text-white/60 text-xs">Click to view details</p>
+                                            <p className="text-white/60 text-xs">{isOtherUserTyping ? 'typing…' : isOtherOnline ? 'Online' : 'Offline'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -240,6 +322,13 @@ export default function ArtistMessages() {
                                                     </div>
                                                 </div>
                                             ))}
+                                            {isOtherUserTyping && (
+                                                <div className="flex justify-start">
+                                                    <div className="p-3 rounded-2xl max-w-[80%] bg-white/10 text-white rounded-tl-sm">
+                                                        <p className="text-white/70">typing…</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div ref={messagesEndRef} />
                                         </>
                                     )}
@@ -248,10 +337,10 @@ export default function ArtistMessages() {
                                 {/* Input Area */}
                                 <div className="p-4 border-t border-white/10 bg-white/5">
                                     <form onSubmit={handleSend} className="flex items-center gap-2">
-                                        <button type="button" className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-accent transition-all">
+                                        <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-accent transition-all">
                                             <ImageIcon className="w-5 h-5" />
                                         </button>
-                                        <button type="button" className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-accent transition-all">
+                                        <button type="button" onClick={startVoiceTyping} className={`p-2 hover:bg-white/10 rounded-full transition-all ${isRecording ? 'text-red-400' : 'text-white/60 hover:text-accent'}`}>
                                             <Mic className="w-5 h-5" />
                                         </button>
                                         <input
@@ -261,6 +350,9 @@ export default function ArtistMessages() {
                                             placeholder="Type a message..."
                                             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-accent/50 placeholder:text-white/30"
                                         />
+                                        <button type="button" onClick={() => setShowEmojiPicker((v) => !v)} className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-accent transition-all">
+                                            <Smile className="w-5 h-5" />
+                                        </button>
                                         <button
                                             type="submit"
                                             disabled={!messageInput.trim() || sending}
@@ -275,6 +367,21 @@ export default function ArtistMessages() {
                                             )}
                                         </button>
                                     </form>
+                                    {showEmojiPicker && (
+                                        <div className="mt-3 p-3 bg-black/30 border border-white/10 rounded-xl flex flex-wrap gap-2">
+                                            {['😀', '😂', '😍', '🔥', '🎵', '🙏', '👍', '❤️', '👏', '✨'].map((emoji) => (
+                                                <button
+                                                    key={emoji}
+                                                    type="button"
+                                                    onClick={() => addEmoji(emoji)}
+                                                    className="text-lg hover:scale-110 transition-transform"
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePickImage} className="hidden" />
                                 </div>
                             </>
                         ) : (

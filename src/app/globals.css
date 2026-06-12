@@ -391,9 +391,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 18px 48px;
-  font-size: 18px;
-  border-radius: 9999px;
+  padding: 14px 36px;
+  font-size: 16px;
+  border-radius: 12px;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);

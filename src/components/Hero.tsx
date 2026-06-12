@@ -127,7 +127,7 @@ export default function Hero() {
                                 </motion.div>
 
                                 {/* Main title — sliding letters */}
-                                <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-white mb-4 leading-[0.95] hero-title">
+                                <h1 className="text-5xl md:text-7xl lg:text-9xl font-bold tracking-tight text-white mb-4 leading-[0.95] hero-title">
                                     <SlidingText
                                         text="TARANG"
                                         className=""
@@ -169,22 +169,48 @@ export default function Hero() {
                                 >
                                     <Link href="/signup?type=artist">
                                         <button className="neon-btn neon-btn-primary group w-full sm:w-auto">
-                                            <span className="relative z-10 flex items-center justify-center gap-2.5 font-semibold text-lg">
-                                                <Music className="w-6 h-6" />
+                                            <span className="relative z-10 flex items-center justify-center gap-2 font-semibold">
+                                                <Music className="w-5 h-5" />
                                                 Join as Artist
                                             </span>
                                         </button>
                                     </Link>
                                     <Link href="/signup?type=client">
                                         <button className="neon-btn neon-btn-outline group w-full sm:w-auto">
-                                            <span className="relative z-10 flex items-center justify-center gap-2.5 font-semibold text-lg">
-                                                <Search className="w-6 h-6" />
+                                            <span className="relative z-10 flex items-center justify-center gap-2 font-semibold">
+                                                <Search className="w-5 h-5" />
                                                 Book an Artist
                                             </span>
                                         </button>
                                     </Link>
                                 </motion.div>
 
+                                {/* SDG Badges */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 2.4, duration: 0.8 }}
+                                    className="flex items-center justify-center gap-6 mb-12"
+                                >
+                                    <div className="flex items-center gap-3 bg-white/[0.03] backdrop-blur-md border border-white/[0.06] rounded-xl px-4 py-2.5">
+                                        <div className="w-10 h-10 rounded-lg bg-[#A21942]/20 border border-[#A21942]/30 flex items-center justify-center text-xs font-bold text-[#A21942]">
+                                            8
+                                        </div>
+                                        <span className="text-xs text-white/50 leading-tight">
+                                            Decent Work &amp;<br />
+                                            Economic Growth
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-white/[0.03] backdrop-blur-md border border-white/[0.06] rounded-xl px-4 py-2.5">
+                                        <div className="w-10 h-10 rounded-lg bg-[#F99D26]/20 border border-[#F99D26]/30 flex items-center justify-center text-xs font-bold text-[#F99D26]">
+                                            11
+                                        </div>
+                                        <span className="text-xs text-white/50 leading-tight">
+                                            Sustainable Cities<br />
+                                            &amp; Communities
+                                        </span>
+                                    </div>
+                                </motion.div>
 
                                 {/* Trust indicators */}
                                 <motion.div
