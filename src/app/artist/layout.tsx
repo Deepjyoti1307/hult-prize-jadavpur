@@ -2,7 +2,10 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import ArtistSidebar from '@/components/ArtistSidebar';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import { useAuth } from '@/contexts/auth-context';
+import { getArtistGuardRedirect } from '@/lib/routing';
 
 export default function ArtistLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -20,8 +23,9 @@ export default function ArtistLayout({ children }: { children: React.ReactNode }
             return;
         }
 
-        if (pathname === '/artist/verification-pending') {
-            return;
+        const redirect = getArtistGuardRedirect(pathname, profile);
+        if (redirect && redirect !== pathname) {
+            router.replace(redirect);
         }
     }, [loading, profile, pathname, router]);
 
@@ -33,5 +37,19 @@ export default function ArtistLayout({ children }: { children: React.ReactNode }
         );
     }
 
-    return <>{children}</>;
+    const showSidebar = pathname !== '/artist/onboarding' && pathname !== '/artist/verification-pending';
+
+    return (
+        <div className="flex min-h-screen bg-[#0a0a0f]">
+            {showSidebar && (
+                <>
+                    <AnimatedBackground />
+                    <ArtistSidebar />
+                </>
+            )}
+            <div className="flex-1 w-full bg-[#0a0a0f] relative overflow-hidden">
+                {children}
+            </div>
+        </div>
+    );
 }

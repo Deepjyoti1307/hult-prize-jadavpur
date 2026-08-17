@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { isAdminEmail } from '@/lib/admin';
 import { BoxReveal } from '@/components/ui/modern-animated-sign-in';
-
-const ADMIN_EMAIL_ALLOWLIST = ['tarang130704@gmail.com'];
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -26,7 +25,7 @@ export default function AdminLoginPage() {
             const userEmail = credential.user.email ?? '';
             const adminRef = doc(db, 'Admin', credential.user.uid);
             const adminSnap = await getDoc(adminRef);
-            if (!ADMIN_EMAIL_ALLOWLIST.includes(userEmail) || !adminSnap.exists()) {
+            if (!isAdminEmail(userEmail) || !adminSnap.exists()) {
                 await signOut(auth);
                 setError('This account is not authorized for admin access.');
                 return;

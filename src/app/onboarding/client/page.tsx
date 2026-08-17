@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
+import { isClientOnboardingComplete } from '@/lib/routing';
 import {
     ArtistOnboarding,
     VerificationStep,
@@ -341,8 +342,23 @@ function LocationModal({
 
 export default function ClientOnboardingPage() {
     const router = useRouter();
-    const { user, profile } = useAuth();
+    const { user, profile, loading } = useAuth();
     const userId = user?.uid ?? null;
+
+    useEffect(() => {
+        if (loading) return;
+        if (!profile) {
+            router.replace('/login?type=client');
+            return;
+        }
+        if (profile.role && profile.role !== 'client') {
+            router.replace('/artist/dashboard');
+            return;
+        }
+        if (isClientOnboardingComplete(profile)) {
+            router.replace('/client/dashboard');
+        }
+    }, [loading, profile, router]);
 
     // Modal states
     const [showLocationModal, setShowLocationModal] = useState(false);

@@ -3,10 +3,14 @@ import { useState, ChangeEvent, FormEvent, ReactNode, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
     GoogleAuthProvider,
+    sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { getPostAuthRedirect } from '@/lib/routing';
+import type { UserProfile } from '@/types/domain';
 import {
     Ripple,
     TechOrbitDisplay,
@@ -145,7 +149,7 @@ function LoginLoading() {
 function LoginContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const userType = searchParams.get('type') || 'client'; // default to client
+    const userType = (searchParams.get('type') || 'client') as 'artist' | 'client';
 
     const [formData, setFormData] = useState<FormData>({
         email: '',
@@ -154,12 +158,33 @@ function LoginContent() {
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-    const goToForgotPassword = (
+    const goToForgotPassword = async (
         event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
     ) => {
         event.preventDefault();
-        console.log('forgot password');
-        // Navigate to forgot password page
+        if (!formData.email) {
+            setErrorMessage('Enter your email address first, then click Forgot password.');
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, formData.email);
+            setErrorMessage('');
+            alert('Password reset email sent. Check your inbox.');
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to send reset email.';
+            setErrorMessage(message);
+        }
+    };
+
+    const redirectAfterLogin = async (uid: string) => {
+        const profileSnap = await getDoc(doc(db, 'users', uid));
+        const profile = profileSnap.exists()
+            ? ({ uid, ...(profileSnap.data() as Omit<UserProfile, 'uid'>) } as UserProfile)
+            : null;
+        router.push(getPostAuthRedirect(profile, userType));
     };
 
     const handleInputChange = (
@@ -180,16 +205,12 @@ function LoginContent() {
         setErrorMessage('');
         setIsSubmitting(true);
         try {
-            await signInWithEmailAndPassword(
+            const credential = await signInWithEmailAndPassword(
                 auth,
                 formData.email,
                 formData.password
             );
-            if (userType === 'artist') {
-                router.push('/artist/onboarding');
-            } else {
-                router.push('/onboarding/client');
-            }
+            await redirectAfterLogin(credential.user.uid);
         } catch (error) {
             const message =
                 error instanceof Error
@@ -207,12 +228,8 @@ function LoginContent() {
         setIsSubmitting(true);
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
-            if (userType === 'artist') {
-                router.push('/artist/onboarding');
-            } else {
-                router.push('/onboarding/client');
-            }
+            const credential = await signInWithPopup(auth, provider);
+            await redirectAfterLogin(credential.user.uid);
         } catch (error) {
             const message =
                 error instanceof Error

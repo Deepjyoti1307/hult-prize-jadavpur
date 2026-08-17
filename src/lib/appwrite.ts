@@ -1,8 +1,11 @@
 import { Client, Storage, ID } from 'appwrite';
 
-const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = '698ab557001bcbb59fa9';
-const APPWRITE_BUCKET_ID = '698b5b8400213791ca0d';
+const APPWRITE_ENDPOINT =
+    process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ?? 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID =
+    process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ?? '698ab557001bcbb59fa9';
+const APPWRITE_BUCKET_ID =
+    process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID ?? '698b5b8400213791ca0d';
 
 const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
 const storage = new Storage(client);

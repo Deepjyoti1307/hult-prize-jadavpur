@@ -191,10 +191,9 @@ export default function ArtistOnboardingPage() {
         }
     };
 
-    const handleApplyForBadge = () => {
-        console.log('Apply for Platform Verified Badge');
-        // Check if all required steps are completed
-        const allCompleted = verificationStatus.idProof &&
+    const handleApplyForBadge = async () => {
+        const allCompleted =
+            verificationStatus.idProof &&
             verificationStatus.introVideo &&
             verificationStatus.performanceClip;
 
@@ -203,10 +202,21 @@ export default function ArtistOnboardingPage() {
             return;
         }
 
-        // Submit badge application (would normally save to backend/database here)
-        console.log('Badge application submitted - redirecting to pending page');
+        if (!userId) return;
 
-        // Redirect to verification pending page
+        const profileRef = doc(db, 'users', userId);
+        await setDoc(
+            profileRef,
+            {
+                adminApproval: {
+                    status: 'pending',
+                    requestedAt: serverTimestamp(),
+                },
+                updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+        );
+
         router.push('/artist/verification-pending');
     };
 

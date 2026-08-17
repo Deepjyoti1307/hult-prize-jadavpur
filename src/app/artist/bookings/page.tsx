@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import ArtistSidebar from '@/components/ArtistSidebar';
-import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import {
     Calendar,
     MapPin,
@@ -19,11 +17,6 @@ export default function ArtistBookings() {
     const { artistBookings } = useAuth();
     const [activeTab, setActiveTab] = useState<'Upcoming' | 'Completed' | 'Cancelled'>('Upcoming');
 
-    useEffect(() => {
-        renderCanvas();
-        return () => stopCanvas();
-    }, []);
-
     const filteredBookings = useMemo(() => {
         if (activeTab === 'Upcoming') {
             return artistBookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending');
@@ -32,12 +25,8 @@ export default function ArtistBookings() {
     }, [artistBookings, activeTab]);
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex relative">
-            <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
-            <ArtistSidebar />
-
-            <main className="flex-1 overflow-y-auto relative z-10">
-                <div className="p-8 pt-20">
+        <main className="flex-1 overflow-y-auto relative z-10">
+            <div className="p-8 pt-20">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
                             <h1 className="text-3xl font-bold text-white mb-2">My Bookings</h1>
@@ -143,8 +132,7 @@ export default function ArtistBookings() {
                             ))
                         )}
                     </div>
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

@@ -29,6 +29,7 @@ export default function BookingModal({
     const [duration, setDuration] = useState(2);
     const [location, setLocation] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [chatConversationId, setChatConversationId] = useState<string | null>(null);
     const { createBooking, startConversation, sendMessage, setActiveConversationId } = useAuth();
     const router = useRouter();
 
@@ -41,6 +42,7 @@ export default function BookingModal({
         setTime('');
         setDuration(2);
         setLocation('');
+        setChatConversationId(null);
         onClose();
     };
 
@@ -65,13 +67,20 @@ export default function BookingModal({
         });
         try {
             const convoId = await startConversation(artistId, artistName, artistImage);
+            setChatConversationId(convoId);
             setActiveConversationId(convoId);
             await sendMessage(
                 convoId,
                 `Booking request: ${artistName} on ${date} at ${time} for ${duration} hour(s) in ${location}.`
             );
+            router.push(`/client/messages?conversationId=${convoId}`);
         } catch (error) {
             console.error('Failed to create booking chat:', error);
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Booking saved, but chat could not be started. Try again from Messages.'
+            );
         }
         setSubmitting(false);
         setStep(3);
@@ -210,7 +219,11 @@ export default function BookingModal({
                                             Payment secured. The artist has been notified.
                                         </p>
                                         <button
-                                            onClick={() => router.push('/client/messages')}
+                                            onClick={() =>
+                                                router.push(
+                                                    `/client/messages?conversationId=${chatConversationId || ''}`
+                                                )
+                                            }
                                             className="mt-6 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white/80 text-sm font-medium transition-all"
                                         >
                                             Open Chat

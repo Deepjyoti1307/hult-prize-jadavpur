@@ -89,7 +89,7 @@ export default function ForUsersSection() {
                                 ))}
                             </ul>
 
-                            <Link href="/signup?role=artist" className="btn-primary">
+                            <Link href="/signup?type=artist" className="btn-primary">
                                 Join as Artist — It's Free
                             </Link>
                         </div>
@@ -210,7 +210,7 @@ export default function ForUsersSection() {
                                 ))}
                             </ul>
 
-                            <Link href="/signup?role=client" className="btn-accent">
+                            <Link href="/signup?type=client" className="btn-accent">
                                 Book an Artist
                             </Link>
                         </div>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Footer from "@/components/Footer";
 import PulsatingDots from '@/components/ui/pulsating-loader';
 
@@ -18,10 +20,18 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate form submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setIsSubmitted(true);
+        try {
+            await addDoc(collection(db, 'contactSubmissions'), {
+                ...formState,
+                createdAt: serverTimestamp(),
+            });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error('Failed to submit contact form:', error);
+            alert('Unable to send your message right now. Please email hello@tarang.in directly.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (

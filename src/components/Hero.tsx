@@ -13,7 +13,7 @@ import {
     MapPin,
     ChevronDown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import PulsatingDots from "@/components/ui/pulsating-loader";
 
 /* Dynamic-load the Three.js scene — SSR disabled */

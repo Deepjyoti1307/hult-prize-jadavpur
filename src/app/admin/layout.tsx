@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-
-const ADMIN_EMAIL_ALLOWLIST = ['tarang130704@gmail.com'];
+import { isAdminEmail } from '@/lib/admin';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -20,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const userEmail = user.email ?? '';
             const adminRef = doc(db, 'Admin', user.uid);
             const adminSnap = await getDoc(adminRef);
-            if (!ADMIN_EMAIL_ALLOWLIST.includes(userEmail) || !adminSnap.exists()) {
+            if (!isAdminEmail(userEmail) || !adminSnap.exists()) {
                 await signOut(auth);
                 router.replace('/admin/login');
             }

@@ -116,9 +116,10 @@ export default function ClientDashboard() {
                 convoId,
                 `Hi ${artist.name}, I'm interested in booking you. Can we discuss the event details?`
             );
-            router.push('/client/messages');
+            router.push(`/client/messages?conversationId=${convoId}`);
         } catch (error) {
             console.error('Failed to start chat:', error);
+            alert(error instanceof Error ? error.message : 'Failed to start chat. Please try again.');
         }
     };
 

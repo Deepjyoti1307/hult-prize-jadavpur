@@ -36,11 +36,17 @@ export default function AdminPage() {
     }, []);
 
     const artistRequests = useMemo(
-        () => users.filter((user) => user.role === 'artist' && !user.adminApproval?.status),
+        () =>
+            users.filter(
+                (user) => user.role === 'artist' && user.adminApproval?.status === 'pending'
+            ),
         [users]
     );
     const clientRequests = useMemo(
-        () => users.filter((user) => user.role === 'client' && !user.adminApproval?.status),
+        () =>
+            users.filter(
+                (user) => user.role === 'client' && user.adminApproval?.status === 'pending'
+            ),
         [users]
     );
 

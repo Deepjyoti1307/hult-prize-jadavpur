@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import ArtistSidebar from '@/components/ArtistSidebar';
-import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import { User, Mail, Phone, MapPin, Camera, Save, Bell, Shield, LogOut, Check } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
@@ -39,11 +37,6 @@ export default function ArtistSettings() {
             setPhotoURL(profile.photoURL || '');
         }
     }, [profile]);
-
-    useEffect(() => {
-        renderCanvas();
-        return () => stopCanvas();
-    }, []);
 
     const handleSave = async () => {
         if (!profile?.uid) return;
@@ -100,12 +93,8 @@ export default function ArtistSettings() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex relative">
-            <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
-            <ArtistSidebar />
-
-            <main className="flex-1 overflow-y-auto relative z-10">
-                <div className="p-8 pt-20 max-w-4xl mx-auto">
+        <main className="flex-1 overflow-y-auto relative z-10">
+            <div className="p-8 pt-20 max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
@@ -286,8 +275,7 @@ export default function ArtistSettings() {
                             </div>
                         </div>
                     </div>
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

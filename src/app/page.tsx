@@ -3,6 +3,8 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
+import ForUsersSection from "@/components/ForUsersSection";
+import SafetyFeatures from "@/components/SafetyFeatures";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -13,6 +15,8 @@ export default function Home() {
         <Header />
         <Hero />
         <HowItWorks />
+        <ForUsersSection />
+        <SafetyFeatures />
         <Footer />
       </div>
     </main>

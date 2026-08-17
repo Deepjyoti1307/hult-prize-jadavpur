@@ -100,8 +100,13 @@ export default function VerificationPendingPage() {
     const { profile } = useAuth();
 
     useEffect(() => {
-        if (profile) {
+        if (!profile) return;
+
+        const status = profile.adminApproval?.status;
+        if (status === 'approved') {
             router.replace('/artist/dashboard');
+        } else if (status === 'rejected') {
+            router.replace('/artist/onboarding');
         }
     }, [profile, router]);
 

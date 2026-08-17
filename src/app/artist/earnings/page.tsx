@@ -1,18 +1,11 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import ArtistSidebar from '@/components/ArtistSidebar';
-import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
+import { useMemo } from 'react';
 import { Wallet, TrendingUp, ArrowUpRight, Download, DollarSign, Clock, Receipt } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function ArtistEarnings() {
     const { transactions, artistBookings } = useAuth();
-
-    useEffect(() => {
-        renderCanvas();
-        return () => stopCanvas();
-    }, []);
 
     // Calculate stats from real data
     const stats = useMemo(() => {
@@ -48,12 +41,8 @@ export default function ArtistEarnings() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex relative">
-            <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
-            <ArtistSidebar />
-
-            <main className="flex-1 overflow-y-auto relative z-10">
-                <div className="p-8 pt-20">
+        <main className="flex-1 overflow-y-auto relative z-10">
+            <div className="p-8 pt-20">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className="text-3xl font-bold text-white mb-2">Earnings & Payouts</h1>
@@ -179,8 +168,7 @@ export default function ArtistEarnings() {
                             )}
                         </div>
                     </div>
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

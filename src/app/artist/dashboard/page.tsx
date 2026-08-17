@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import ArtistSidebar from '@/components/ArtistSidebar';
-import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import {
     Music,
     Users,
@@ -49,14 +48,10 @@ function StatCard({ icon, label, value, iconBg }: StatCardProps) {
 }
 
 export default function ArtistDashboard() {
+    const router = useRouter();
     const { profile, artistBookings, updateBookingStatus, artists } = useAuth();
 
     const currentArtist = useMemo(() => artists.find((a) => a.id === profile?.uid), [artists, profile]);
-
-    useEffect(() => {
-        renderCanvas();
-        return () => stopCanvas();
-    }, []);
 
     const verifiedSteps = useMemo(() => {
         const verification = profile?.artistVerification ?? {};
@@ -142,19 +137,8 @@ export default function ArtistDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex relative">
-            {/* Full-page canvas background */}
-            <canvas
-                className="pointer-events-none fixed inset-0 z-0"
-                id="canvas"
-            />
-
-            {/* Sidebar */}
-            <ArtistSidebar />
-
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto relative z-10">
-                <div className="p-8 pt-20">
+        <main className="flex-1 overflow-y-auto relative z-10">
+            <div className="p-8 pt-20">
                     {/* Main Content Area */}
                     <div className="space-y-6">
                         {/* Welcome Section */}
@@ -226,10 +210,16 @@ export default function ArtistDashboard() {
                                 </div>
 
                                 <div className="flex flex-col gap-2 min-w-[140px]">
-                                    <button className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-sm font-medium transition-all">
+                                    <button
+                                        onClick={() => router.push('/artist/settings')}
+                                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-sm font-medium transition-all"
+                                    >
                                         Edit Profile
                                     </button>
-                                    <button className="px-4 py-2 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20 rounded-xl text-sm font-medium transition-all">
+                                    <button
+                                        onClick={() => profile?.uid && router.push(`/client/artist/${profile.uid}`)}
+                                        className="px-4 py-2 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20 rounded-xl text-sm font-medium transition-all"
+                                    >
                                         View Public Page
                                     </button>
                                 </div>
@@ -332,8 +322,7 @@ export default function ArtistDashboard() {
                             )}
                         </div>
                     </div>
-                </div>
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

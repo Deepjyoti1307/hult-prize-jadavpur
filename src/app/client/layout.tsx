@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ClientSidebar from '@/components/ClientSidebar';
 import { useAuth } from '@/contexts/auth-context';
+import { getClientGuardRedirect } from '@/lib/routing';
 
 export default function ClientLayout({
     children,
@@ -11,6 +12,7 @@ export default function ClientLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const pathname = usePathname();
     const { profile, loading } = useAuth();
 
     useEffect(() => {
@@ -21,8 +23,14 @@ export default function ClientLayout({
         }
         if (profile.role && profile.role !== 'client') {
             router.replace('/artist/dashboard');
+            return;
         }
-    }, [loading, profile, router]);
+
+        const redirect = getClientGuardRedirect(pathname, profile);
+        if (redirect && redirect !== pathname) {
+            router.replace(redirect);
+        }
+    }, [loading, profile, pathname, router]);
 
     if (loading) {
         return (

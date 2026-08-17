@@ -66,13 +66,25 @@ export default function Header() {
                     >
                         Admin
                     </Link>
-                    {user && (
+                    {user ? (
                         <button
                             onClick={() => signOut(auth)}
                             className="text-white/60 hover:text-white transition-colors duration-300 font-medium text-sm"
                         >
                             Logout
                         </button>
+                    ) : (
+                        <>
+                            <Link
+                                href="/login?type=client"
+                                className="text-white/60 hover:text-white transition-colors duration-300 font-medium text-sm"
+                            >
+                                Log in
+                            </Link>
+                            <Button asChild size="sm" className="rounded-full">
+                                <Link href="/signup?type=client">Sign up</Link>
+                            </Button>
+                        </>
                     )}
                 </nav>
 

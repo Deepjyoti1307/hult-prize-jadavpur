@@ -2,9 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import ArtistSidebar from '@/components/ArtistSidebar';
 import IncidentModal from '@/components/IncidentModal';
-import { renderCanvas, stopCanvas } from '@/components/ui/canvas';
 import {
     Shield, AlertTriangle, MapPin, Phone, Lock, Radio,
     ChevronRight, Users, Eye, LocateFixed, Loader2,
@@ -44,11 +42,6 @@ export default function ArtistSafety() {
         { name: 'Mom', phone: '+91 98765 43210' },
         { name: 'Manager', phone: '+91 98765 43211' },
     ];
-
-    useEffect(() => {
-        renderCanvas();
-        return () => stopCanvas();
-    }, []);
 
     // Cleanup watchPosition on unmount
     useEffect(() => {
@@ -201,10 +194,7 @@ export default function ArtistSafety() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] flex relative">
-            <canvas className="pointer-events-none fixed inset-0 z-0" id="canvas" />
-            <ArtistSidebar />
-
+        <>
             <main className="flex-1 overflow-y-auto relative z-10">
                 <div className="p-6 md:p-8 pt-20 max-w-7xl mx-auto">
                     {/* ═══════ Hero: 3D Shield + SOS ═══════ */}
@@ -527,6 +517,6 @@ export default function ArtistSafety() {
                 isOpen={incidentModalOpen}
                 onClose={() => setIncidentModalOpen(false)}
             />
-        </div>
+        </>
     );
 }
